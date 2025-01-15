@@ -1,0 +1,1 @@
+koulussa tehty tauoilla
