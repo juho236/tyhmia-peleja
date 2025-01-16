@@ -1,6 +1,6 @@
 import { Layers, width, height } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
-import { LoadTexture, TextureBuffer } from "../lib/texture.js";
+import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
 import { v2, entity } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
@@ -8,7 +8,13 @@ import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 
 export const Load = async () => {
     SetSpeed(0);
-    const playerEntity = new entity("Player",new v2(16,16),Layers.Player,await TextureBuffer(await LoadTexture("assets/ship-forward.png"),16,16));
+    const playerEntity = new entity("Player",new v2(16,16),Layers.Player,await TextureBuffers(await LoadTextures(
+        {
+            forward: "assets/ship-forward.png",
+            forward2: "assets/ship-forward.png"
+        }
+    ),16,16));
+
     playerEntity.speed = 10;
     playerEntity.pos = new v2(width / 2,height - 64);
     playerEntity.maxspeed = 128;
@@ -31,22 +37,8 @@ export const Load = async () => {
         playerEntity.speed += dt * (200 - playerEntity.speed) / 5;
         SetSpeed(playerEntity.speed);
 
-        let dir = new v2(0,0);
-
-        if (playerEntity.left) {
-            dir = dir.sub(new v2(1,0));
-        }
-        if (playerEntity.right) {
-            dir = dir.add(new v2(1,0));
-        }
-        if (playerEntity.up) {
-            dir = dir.sub(new v2(0,1));
-        }
-        if (playerEntity.down) {
-            dir = dir.add(new v2(0,1));
-        }
-
-        dir = dir.unit();
+        let dir = getDir(playerEntity);
+        setDir(playerEntity,dir);
 
         if (dir.x == 0 && dir.y == 0) {
             playerEntity.velocity = playerEntity.velocity.sub(playerEntity.velocity.multiply(dt).multiply(playerEntity.deceleration));
@@ -56,4 +48,34 @@ export const Load = async () => {
         playerEntity.frame(dt);
         playerEntity.render();
     });
+}
+
+
+const setDir = (playerEntity,dir) => {
+    if (dir.x != 0 || dir.y != 0) {
+        const a = Math.atan2(dir.x,-dir.y);
+        playerEntity.trot = a;
+    }
+
+
+    playerEntity.texture = playerEntity.textures.forward;
+}
+
+const getDir = playerEntity => {
+    let dir = new v2(0,0);
+
+    if (playerEntity.left) {
+        dir = dir.sub(new v2(1,0));
+    }
+    if (playerEntity.right) {
+        dir = dir.add(new v2(1,0));
+    }
+    if (playerEntity.up) {
+        dir = dir.sub(new v2(0,1));
+    }
+    if (playerEntity.down) {
+        dir = dir.add(new v2(0,1));
+    }
+
+    return dir.unit();
 }
