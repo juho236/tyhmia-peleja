@@ -1,7 +1,7 @@
 import { Layers, width, height } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
-import { v2, entity, trailParticleEmitter } from "../lib/classes.js";
+import { v2, entity, trailParticleEmitter, laserParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
@@ -27,11 +27,26 @@ export const Load = async () => {
     new trailParticleEmitter("LeftFire",60,playerEntity,new v2(-2,8),trailTextures,new v2(5,5));
     new trailParticleEmitter("RightFire",60,playerEntity,new v2(2,8),trailTextures,new v2(5,5));
 
+    const laserTextures = await TextureBuffers(await LoadTextures(
+        {
+            frame0: "assets/shootlaser0.png",
+            frame1: "assets/shootlaser1.png",
+            frame2: "assets/shootlaser2.png",
+            frame3: "assets/shootlaser3.png",
+            frame4: "assets/shootlaser4.png",
+        }
+    ),9,9)
+    playerEntity.leftLaser = new laserParticleEmitter("LeftLaser",0,playerEntity,new v2(-4,-8),laserTextures,new v2(9,9));
+    playerEntity.rightlaser = new laserParticleEmitter("RightLaser",0,playerEntity,new v2(4,-8),laserTextures,new v2(9,9));
+
     playerEntity.speed = 10;
     playerEntity.pos = new v2(width / 2,height - 64);
     playerEntity.maxspeed = 128;
     playerEntity.acceleration = 5;
     playerEntity.deceleration = 3;
+
+    playerEntity.shootspeed = 10;
+    playerEntity.shootTimer = 0;
 
     BindToKeyDown("arrowleft",() => { playerEntity.left = true; });
     BindToKeyUp("arrowleft",() => { playerEntity.left = false; });
@@ -45,6 +60,9 @@ export const Load = async () => {
     BindToKeyDown("arrowdown",() => { playerEntity.down = true; });
     BindToKeyUp("arrowdown",() => { playerEntity.down = false; });
 
+    BindToKeyDown("x",() => { playerEntity.shoot = 1; });
+    BindToKeyUp("x",() => { playerEntity.shoot = 0; });
+
     AddTick(dt => {
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
@@ -57,6 +75,18 @@ export const Load = async () => {
         } else {
             playerEntity.velocity = playerEntity.velocity.add((new v2(playerEntity.maxspeed * dir.x,playerEntity.maxspeed * dir.y).sub(new v2(playerEntity.velocity.x,playerEntity.velocity.y))).multiply(dt).multiply(playerEntity.acceleration));
         }
+
+        if (playerEntity.shootTimer > 0) { playerEntity.shootTimer -= dt * playerEntity.shootspeed; }
+        if (playerEntity.shootTimer <= 0 && playerEntity.shoot !== undefined) {
+            if (playerEntity.shoot === 0) {
+                playerEntity.shoot = undefined;
+            }
+
+            playerEntity.shootTimer += 1;
+            shoot(playerEntity);
+        }
+
+
         playerEntity.frame(dt);
         playerEntity.render();
     });
@@ -90,4 +120,9 @@ const getDir = playerEntity => {
     }
 
     return dir.unit();
+}
+
+
+const shoot = playerEntity => {
+    playerEntity.leftLaser.emit();
 }

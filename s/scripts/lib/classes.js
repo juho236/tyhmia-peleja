@@ -73,21 +73,7 @@ class ParticleEmitter {
                 return;
             }
 
-            if (particle.lifetime < 0.75) {
-                particle.options = 1;
-                particle.path = "smoke";
-            }
-
-            particle.animation += dt * 5;
-            particle.buffer.Draw.globalAlpha = particle.lifetime;
-            if (particle.animation >= 1) {
-                particle.animation -= 1;
-
-                changeTexture(particle,particle.options);
-            }
-            particle.rot += Math.sign(particle.rot) * dt * 4;
-            particle.pos = particle.pos.add(particle.velocity.multiply(dt));
-            particle.velocity = particle.velocity.add(new v2(0,this.target.speed / 100).multiply(dt));
+            this.pframe(particle,dt);
         });
     }
     render() {
@@ -98,7 +84,48 @@ class ParticleEmitter {
         });
     }
 }
-export class trailParticleEmitter extends ParticleEmitter {
+class RandomEmit extends ParticleEmitter {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+
+    pframe(particle,dt) {
+        if (particle.lifetime < 0.75) {
+            particle.options = 1;
+            particle.path = "smoke";
+        }
+
+        particle.animation += dt * 5;
+        particle.buffer.Draw.globalAlpha = particle.lifetime;
+        if (particle.animation >= 1) {
+            particle.animation -= 1;
+
+            changeTexture(particle,particle.options);
+        }
+        particle.rot += Math.sign(particle.rot) * dt * 4;
+        particle.pos = particle.pos.add(particle.velocity.multiply(dt));
+        particle.velocity = particle.velocity.add(new v2(0,this.target.speed / 100).multiply(dt));
+    } 
+}
+class OrderEmit extends ParticleEmitter {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+
+    pframe(particle,dt) {
+        particle.animation += dt * 24;
+        if (particle.animation >= 1) {
+            particle.animation -= 1;
+
+            let str = `${particle.path}${particle.animationindex}`;
+            particle.texture = particle.textures[str];
+            particle.animationindex += 1;
+        }
+
+        particle.pos = particle.pos.add(this.target.velocity.multiply(dt));
+    } 
+}
+export class trailParticleEmitter extends RandomEmit {
     constructor(name,rate,entity,offset,textures,size) {
         super(name,rate,entity,offset,textures,size);
     }
@@ -122,9 +149,32 @@ export class trailParticleEmitter extends ParticleEmitter {
         return obj;
     }
 }
+export class laserParticleEmitter extends OrderEmit {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+    new() {
+        const rot = this.target.rot;
+        const obj = {
+            pos: this.target.pos.add(transform(rot,this.offset)),
+            rot: 0,
+            size: this.size,
+            lifetime: 0.2,
+            textures: this.textures,
+            buffer: BlankBuffer(this.size.x,this.size.y),
+            animation: 1,
+            animationindex: 0,
+            path: "frame",
+        };
+
+        obj.texture = obj.textures.frame0;
+        return obj;
+    }
+}
+
 
 const changeTexture = (particle,max) => {
-    particle.texture = particle.textures[`${particle.path}${Math.round(Math.random() * max)}`]
+    particle.texture = particle.textures[`${particle.path}${Math.round(Math.random() * max)}`];
 }
 const transform = (rot,offset) => {
     return new v2(Math.cos(rot) * offset.x - Math.sin(rot) * offset.y,Math.sin(rot) * offset.x + Math.cos(rot) * offset.y);
@@ -165,10 +215,10 @@ export class entity {
         })
     }
     render() {
+        draw(this,this.layer,this.buffer);
         this.emitters.map(emitter => {
             if (!emitter) { return; }
             emitter.render();
         })
-        draw(this,this.layer,this.buffer);
     }
 }
