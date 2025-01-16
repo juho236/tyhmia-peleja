@@ -1,7 +1,7 @@
 import { Layers, width, height } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
-import { v2, entity } from "../lib/classes.js";
+import { v2, entity, trailParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
@@ -10,10 +10,22 @@ export const Load = async () => {
     SetSpeed(0);
     const playerEntity = new entity("Player",new v2(16,16),Layers.Player,await TextureBuffers(await LoadTextures(
         {
-            forward: "assets/ship-forward.png",
-            forward2: "assets/ship-forward.png"
+            forward: "assets/ship-forward.png"
         }
     ),16,16));
+
+    const trailTextures = await TextureBuffers(await LoadTextures(
+        {
+            full0: "assets/trail-full0.png",
+            full1: "assets/trail-full1.png",
+            full2: "assets/trail-full2.png",
+            full3: "assets/trail-full3.png",
+            smoke0: "assets/trail-smoke0.png",
+            smoke1: "assets/trail-smoke1.png",
+        }
+    ),5,5)
+    new trailParticleEmitter("LeftFire",60,playerEntity,new v2(-2,8),trailTextures,new v2(5,5));
+    new trailParticleEmitter("RightFire",60,playerEntity,new v2(2,8),trailTextures,new v2(5,5));
 
     playerEntity.speed = 10;
     playerEntity.pos = new v2(width / 2,height - 64);
@@ -34,7 +46,7 @@ export const Load = async () => {
     BindToKeyUp("arrowdown",() => { playerEntity.down = false; });
 
     AddTick(dt => {
-        playerEntity.speed += dt * (200 - playerEntity.speed) / 5;
+        playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
 
         let dir = getDir(playerEntity);

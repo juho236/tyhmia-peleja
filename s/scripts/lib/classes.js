@@ -39,16 +39,105 @@ export const TurnTowards = (angle,targetAngle,speed) => {
 }
 
 
-class Particles {
-    constructor(name,rate,entity,offset,textures,size,) {
+class ParticleEmitter {
+    constructor(name,rate,entity,offset,textures,size) {
         this.name = name;
         
+        this.size = size;
         this.rate = rate;
         this.offset = offset;
+        this.target = entity;
         this.textures = textures;
         table.insert(entity.emitters,this);
     }
+    particles = [];
     cooldown = 0;
+
+    emit() {
+        table.insert(this.particles,this.new());
+    }
+
+    frame(dt) {
+        this.cooldown += dt * this.rate;
+        if (this.cooldown >= 1) {
+            this.cooldown -= 1;
+            this.emit();
+        }
+
+        this.particles.map(particle => {
+            if (!particle) { return; }
+
+            particle.lifetime -= dt;
+            if (particle.lifetime <= 0) {
+                table.remove(this.particles,particle);
+                return;
+            }
+
+            if (particle.lifetime < 0.75) {
+                particle.options = 1;
+                particle.path = "smoke";
+            }
+
+            particle.animation += dt * 5;
+            particle.buffer.Draw.globalAlpha = particle.lifetime;
+            if (particle.animation >= 1) {
+                particle.animation -= 1;
+
+                changeTexture(particle,particle.options);
+            }
+            particle.rot += Math.sign(particle.rot) * dt * 4;
+            particle.pos = particle.pos.add(particle.velocity.multiply(dt));
+            particle.velocity = particle.velocity.add(new v2(0,this.target.speed / 100).multiply(dt));
+        });
+    }
+    render() {
+        this.particles.map(particle => {
+            if (!particle) { return; }
+
+            draw(particle,this.target.layer,particle.buffer);
+        });
+    }
+}
+export class trailParticleEmitter extends ParticleEmitter {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+
+    new() {
+        const rot = this.target.rot + (Math.random() - 0.5) / 2;
+        const obj = {
+            pos: this.target.pos.add(transform(rot,this.offset)),
+            rot: Math.random() * 2 * Math.PI,
+            size: this.size,
+            velocity: new v2(-Math.sin(rot),Math.cos(rot)).multiply(60 + Math.random() * 40),
+            lifetime: 1,
+            textures: this.textures,
+            buffer: BlankBuffer(this.size.x,this.size.y),
+            animation: 0,
+            path: "full",
+            options: 3
+        };
+
+        changeTexture(obj,obj.options);
+        return obj;
+    }
+}
+
+const changeTexture = (particle,max) => {
+    particle.texture = particle.textures[`${particle.path}${Math.round(Math.random() * max)}`]
+}
+const transform = (rot,offset) => {
+    return new v2(Math.cos(rot) * offset.x - Math.sin(rot) * offset.y,Math.sin(rot) * offset.x + Math.cos(rot) * offset.y);
+}
+
+const draw = (entity,layer,buffer) => {
+    buffer.Draw.resetTransform();
+    buffer.Draw.clearRect(0,0,entity.size.x,entity.size.y);
+    const rot = entity.rot;
+    buffer.Draw.setTransform(Math.cos(rot),Math.sin(rot),-Math.sin(rot),Math.cos(rot),entity.size.x / 2,entity.size.y / 2);
+    buffer.Draw.drawImage(entity.texture.Buffer,-entity.size.x / 2,-entity.size.y / 2);
+
+    layer.Draw.drawImage(buffer.Buffer,Math.round(entity.pos.x - entity.size.x / 2),Math.round(entity.pos.y - entity.size.y / 2));
 }
 
 export class entity {
@@ -69,14 +158,17 @@ export class entity {
     frame(dt) {
         this.pos = this.pos.add(this.velocity.multiply(dt)).clamp(new v2(0,0), new v2(width, height));
         this.rot = TurnTowards(this.rot,this.trot,dt * 7);
+
+        this.emitters.map(emitter => {
+            if (!emitter) { return; }
+            emitter.frame(dt);
+        })
     }
     render() {
-        this.buffer.Draw.resetTransform();
-        this.buffer.Draw.clearRect(0,0,this.size.x,this.size.y);
-        const rot = this.rot;
-        this.buffer.Draw.setTransform(Math.cos(rot),Math.sin(rot),-Math.sin(rot),Math.cos(rot),this.size.x / 2,this.size.y / 2);
-        this.buffer.Draw.drawImage(this.texture.Buffer,-this.size.x / 2,-this.size.y / 2);
-
-        this.layer.Draw.drawImage(this.buffer.Buffer,Math.round(this.pos.x - this.size.x / 2),Math.round(this.pos.y - this.size.y / 2));
+        this.emitters.map(emitter => {
+            if (!emitter) { return; }
+            emitter.render();
+        })
+        draw(this,this.layer,this.buffer);
     }
 }

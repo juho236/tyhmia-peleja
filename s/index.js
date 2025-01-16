@@ -9,6 +9,7 @@ async function main() {
     const ctx = canvas.getContext("2d");
     if (!ctx) { return; }
 
+    console.log("Start loading");
     await LoadGame();
     LoadRenderer(canvas, ctx);
     
