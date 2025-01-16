@@ -1,4 +1,5 @@
 import { table } from "../lib/table.js";
+import { ClearLayer, Layers } from "../renderer/render.js";
 
 const callbacks = [];
 
@@ -56,6 +57,7 @@ const frame = () => {
         frameTime -= 1;
         ticks -= 1;
 
+        ClearLayer(Layers.Player);
         callbacks.map(callback => { if (!callback) { return; } callback(1 / frameRate); });
     }
 

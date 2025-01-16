@@ -9,11 +9,11 @@ async function main() {
     const ctx = canvas.getContext("2d");
     if (!ctx) { return; }
 
-    console.log("Loaded");
-    LoadGame();
+    await LoadGame();
     LoadRenderer(canvas, ctx);
     
     Load();
+    console.log("Loaded");
 }
 
 main();

@@ -8,7 +8,12 @@ export const Load = (canvas, draw) => {
     AddTick(dt => {main(canvas,draw);});
 }
 export const Layers = {
-    Stars: BlankBuffer(width,height)
+    Stars: BlankBuffer(width,height),
+    Player: BlankBuffer(width,height)
+}
+
+export const ClearLayer = layer => {
+    layer.Draw.clearRect(0,0,width,height);
 }
 
 
@@ -20,4 +25,5 @@ const main = (canvas, draw) => {
 
     draw.clearRect(0,0,width,height);
     draw.drawImage(Layers.Stars.Buffer,0,0);
+    draw.drawImage(Layers.Player.Buffer,0,0);
 }

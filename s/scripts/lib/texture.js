@@ -31,8 +31,6 @@ export const TextureBuffer = async (blob, width, height) => {
     const url = window.URL.createObjectURL(blob);
     await seturl(img,url);
 
-    console.log(img);
-
     buffer.Draw.drawImage(img,0,0,width,height);
     return buffer;
 }
