@@ -1,14 +1,16 @@
-import { Add as AddTick } from "../engine/frame.js";
+import { Add as AddTick, setRenderer } from "../engine/frame.js";
 import { BlankBuffer } from "../lib/texture.js";
 
 export const width = 384;
 export const height = 256;
 
 export const Load = (canvas, draw) => {
-    AddTick(dt => {main(canvas,draw);});
+    setRenderer(dt => {main(canvas,draw);});
 }
 export const Layers = {
     Stars: BlankBuffer(width,height),
+    Projectiles: BlankBuffer(width,height),
+    Enemies: BlankBuffer(width,height),
     Player: BlankBuffer(width,height)
 }
 
@@ -25,5 +27,7 @@ const main = (canvas, draw) => {
 
     draw.clearRect(0,0,width,height);
     draw.drawImage(Layers.Stars.Buffer,0,0);
+    draw.drawImage(Layers.Enemies.Buffer,0,0);
+    draw.drawImage(Layers.Projectiles.Buffer,0,0);
     draw.drawImage(Layers.Player.Buffer,0,0);
 }

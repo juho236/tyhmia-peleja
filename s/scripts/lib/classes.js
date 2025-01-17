@@ -1,3 +1,4 @@
+import { Add, Remove } from "../engine/frame.js";
 import { height, width } from "../renderer/render.js";
 import { table } from "./table.js";
 import { BlankBuffer } from "./texture.js";
@@ -29,13 +30,18 @@ export class v2 {
     }
 }
 
+export const ClampAngle = angle => {
+    let u = Math.sign(angle);
+    return (angle + u * Math.PI) % (Math.PI * 2) - u * Math.PI;
+}
+
 export const TurnTowards = (angle,targetAngle,speed) => {
     const d = targetAngle - angle;
-    if (Math.abs(d) <= speed) { return targetAngle; }
+    if (Math.abs(d) <= speed) { return ClampAngle(targetAngle); }
 
     let u = Math.sign(d);
     if (Math.abs(d) > Math.PI) { u = -u; }
-    return (angle + u * speed + u * Math.PI) % (Math.PI * 2) - u * Math.PI;
+    return ClampAngle(angle + u * speed);
 }
 
 
@@ -59,7 +65,7 @@ class ParticleEmitter {
 
     frame(dt) {
         this.cooldown += dt * this.rate;
-        if (this.cooldown >= 1) {
+        while (this.cooldown >= 1) {
             this.cooldown -= 1;
             this.emit();
         }
@@ -74,6 +80,7 @@ class ParticleEmitter {
             }
 
             this.pframe(particle,dt);
+            if (this.oframe) { this.oframe(dt); }
         });
     }
     render() {
@@ -122,7 +129,7 @@ class OrderEmit extends ParticleEmitter {
             particle.animationindex += 1;
         }
 
-        particle.pos = particle.pos.add(this.target.velocity.multiply(dt));
+        particle.pos = this.target.pos.add(transform(this.target.rot,this.offset))
     } 
 }
 export class trailParticleEmitter extends RandomEmit {
@@ -170,6 +177,9 @@ export class laserParticleEmitter extends OrderEmit {
         obj.texture = obj.textures.frame0;
         return obj;
     }
+    oframe(dt) {
+        
+    }
 }
 
 
@@ -190,8 +200,10 @@ const draw = (entity,layer,buffer) => {
     layer.Draw.drawImage(buffer.Buffer,Math.round(entity.pos.x - entity.size.x / 2),Math.round(entity.pos.y - entity.size.y / 2));
 }
 
+const entities = [];
+
 export class entity {
-    constructor(name,size,layer,textures) {
+    constructor(name,size,hitbox,layer,textures) {
         this.name = name;
 
         this.layer = layer;
@@ -200,19 +212,34 @@ export class entity {
         this.pos = new v2(0,0);
         this.velocity = new v2(0,0);
         this.size = size;
+        this.hitbox = hitbox;
         this.rot = 0;
         this.trot = 0;
+        this.turnspeed = 5;
+        table.insert(entities,this);
     }
     emitters = [];
 
+    damage(dmg) {
+        this.health -= dmg;
+        if (this.health <= 0) { this.died(); }
+    }
+    
+    destroy() {
+        if (this.destroying) {this.destroying(); }
+        Remove(this.event);
+        table.remove(entities,this);
+    }
     frame(dt) {
         this.pos = this.pos.add(this.velocity.multiply(dt)).clamp(new v2(0,0), new v2(width, height));
-        this.rot = TurnTowards(this.rot,this.trot,dt * 7);
+        this.rot = TurnTowards(this.rot,this.trot,dt * this.turnspeed);
+        if (this.rot != this.rot) { this.rot = 0; }
 
         this.emitters.map(emitter => {
             if (!emitter) { return; }
             emitter.frame(dt);
-        })
+        });
+        collide(this);
     }
     render() {
         draw(this,this.layer,this.buffer);
@@ -220,5 +247,60 @@ export class entity {
             if (!emitter) { return; }
             emitter.render();
         })
+    }
+}
+
+const collide = target => {
+    table.iterate(entities,entity => {
+        if (!entity) { return; }
+        if (entity.group == target.group) { return; }
+        
+        if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x + entity.hitbox.x) { return; }
+        if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y + entity.hitbox.y) { return; }
+        if (!entity.health) { return; } 
+        entity.damage(1);
+        if (target.isProjectile) {
+            target.pierce -= 1;
+            if (target.pierce < 0) { target.destroy(); }
+        }
+    })}
+
+export class projectile {
+    constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
+        this.name = name;
+        this.group = group;
+
+        this.layer = layer;
+        this.buffer = BlankBuffer(size.x,size.y);
+        this.textures = textures;
+        this.pos = pos;
+        this.velocity = velocity;
+        this.size = size;
+        this.hitbox = hitbox;
+        this.rot = Math.atan2(-velocity.x,velocity.y);
+        this.pierce = 0;
+
+        this.fr = Add(dt => {
+            this.frame(dt);
+            this.render();
+        })
+        table.insert(entities,this);
+    }
+    isProjectile = true;
+    destroy() {
+        Remove(this.fr);
+        table.remove(entities,this);
+    }
+    
+    frame(dt) {
+        this.pos = this.pos.add(this.velocity.multiply(dt));
+        if ((this.pos.x < -this.size.x || this.pos.x > width + this.size.x) || (this.pos.y < -this.size.y || this.pos.y > height + this.size.y)) {
+            this.destroy();
+        }
+
+        collide(this);
+    }
+    render() {
+        draw(this,this.layer,this.buffer);
     }
 }

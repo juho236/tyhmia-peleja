@@ -42,7 +42,12 @@ let frameTime = 0;
 
 let lastTime = time();
 
-const maxticks = 4;
+const maxticks = 5;
+
+let renderer;
+export const setRenderer = r => {
+    renderer = r;
+}
 const frame = () => {
     if (!run) { return; }
 
@@ -57,8 +62,11 @@ const frame = () => {
         frameTime -= 1;
         ticks -= 1;
 
+        ClearLayer(Layers.Projectiles);
+        ClearLayer(Layers.Enemies);
         ClearLayer(Layers.Player);
-        callbacks.map(callback => { if (!callback) { return; } callback(1 / frameRate); });
+        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate); });
+        renderer();
     }
 
     window.requestAnimationFrame(frame);

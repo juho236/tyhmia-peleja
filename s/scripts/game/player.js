@@ -1,18 +1,28 @@
 import { Layers, width, height } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
-import { v2, entity, trailParticleEmitter, laserParticleEmitter } from "../lib/classes.js";
+import { v2, entity, trailParticleEmitter, laserParticleEmitter, projectile } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
+import { LoadWave, SetPlayer } from "./enemies.js";
 
+
+let lasertextures;
 export const Load = async () => {
     SetSpeed(0);
-    const playerEntity = new entity("Player",new v2(16,16),Layers.Player,await TextureBuffers(await LoadTextures(
+    const playerEntity = new entity("Player",new v2(16,16),new v2(8,8),Layers.Player,await TextureBuffers(await LoadTextures(
         {
             forward: "assets/ship-forward.png"
         }
     ),16,16));
+    playerEntity.group = "player";
+
+    lasertextures = await TextureBuffers(await LoadTextures(
+        {
+            default: "assets/laser1.png"
+        }
+    ),16,16)
 
     const trailTextures = await TextureBuffers(await LoadTextures(
         {
@@ -36,16 +46,17 @@ export const Load = async () => {
             frame4: "assets/shootlaser4.png",
         }
     ),9,9)
-    playerEntity.leftLaser = new laserParticleEmitter("LeftLaser",0,playerEntity,new v2(-4,-8),laserTextures,new v2(9,9));
-    playerEntity.rightlaser = new laserParticleEmitter("RightLaser",0,playerEntity,new v2(4,-8),laserTextures,new v2(9,9));
+    playerEntity.leftLaser = new laserParticleEmitter("LeftLaser",0,playerEntity,new v2(-6,-8),laserTextures,new v2(9,9));
+    playerEntity.rightlaser = new laserParticleEmitter("RightLaser",0,playerEntity,new v2(6,-8),laserTextures,new v2(9,9));
 
     playerEntity.speed = 10;
     playerEntity.pos = new v2(width / 2,height - 64);
     playerEntity.maxspeed = 128;
     playerEntity.acceleration = 5;
     playerEntity.deceleration = 3;
+    playerEntity.turnspeed = 7;
 
-    playerEntity.shootspeed = 10;
+    playerEntity.shootspeed = 8;
     playerEntity.shootTimer = 0;
 
     BindToKeyDown("arrowleft",() => { playerEntity.left = true; });
@@ -60,10 +71,11 @@ export const Load = async () => {
     BindToKeyDown("arrowdown",() => { playerEntity.down = true; });
     BindToKeyUp("arrowdown",() => { playerEntity.down = false; });
 
-    BindToKeyDown("x",() => { playerEntity.shoot = 1; });
-    BindToKeyUp("x",() => { playerEntity.shoot = 0; });
+    playerEntity.shoot = false
+    BindToKeyDown("x",() => { playerEntity.shoot = true; });
+    BindToKeyUp("x",() => { playerEntity.shoot = false; });
 
-    AddTick(dt => {
+    playerEntity.event = AddTick(dt => {
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
 
@@ -77,11 +89,7 @@ export const Load = async () => {
         }
 
         if (playerEntity.shootTimer > 0) { playerEntity.shootTimer -= dt * playerEntity.shootspeed; }
-        if (playerEntity.shootTimer <= 0 && playerEntity.shoot !== undefined) {
-            if (playerEntity.shoot === 0) {
-                playerEntity.shoot = undefined;
-            }
-
+        if (playerEntity.shootTimer <= 0 && playerEntity.shoot) {
             playerEntity.shootTimer += 1;
             shoot(playerEntity);
         }
@@ -90,6 +98,14 @@ export const Load = async () => {
         playerEntity.frame(dt);
         playerEntity.render();
     });
+
+    playerEntity.health = 3;
+    playerEntity.maxhealth = 3;
+    playerEntity.removing = () => {
+        Load();
+    }
+    SetPlayer(playerEntity);
+    LoadWave();
 }
 
 
@@ -125,4 +141,9 @@ const getDir = playerEntity => {
 
 const shoot = playerEntity => {
     playerEntity.leftLaser.emit();
+    playerEntity.rightlaser.emit();
+    
+    const rot = playerEntity.rot;
+    new projectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(rot),-Math.cos(rot)).multiply(350),new v2(16,16),new v2(12,12),Layers.Projectiles,lasertextures).texture = lasertextures.default;
+
 }
