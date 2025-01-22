@@ -129,7 +129,7 @@ class OrderEmit extends ParticleEmitter {
             particle.animationindex += 1;
         }
 
-        particle.pos = this.target.pos.add(transform(this.target.rot,this.offset))
+        particle.pos = this.target.pos.add(transform(this.target.rot,particle.offset))
     } 
 }
 class BurstEmit extends ParticleEmitter {
@@ -209,6 +209,33 @@ export class laserParticleEmitter extends OrderEmit {
             path: "frame",
         };
 
+        obj.offset = this.offset;
+        obj.texture = obj.textures.frame0;
+        return obj;
+    }
+    oframe(dt) {
+        
+    }
+}class LaserHitParticleEmitter extends OrderEmit {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+    new() {
+        const offset = new v2(Math.random() * this.target.size.x - this.target.size.x / 2,Math.random() * this.target.size.y - this.target.size.y / 2);
+        const rot = this.target.rot;
+        const obj = {
+            pos: this.target.pos.add(transform(rot,offset)),
+            rot: 0,
+            size: this.size,
+            lifetime: 0.2,
+            textures: this.textures,
+            buffer: BlankBuffer(this.size.x,this.size.y),
+            animation: 1,
+            animationindex: 0,
+            path: "frame",
+        };
+
+        obj.offset = offset;
         obj.texture = obj.textures.frame0;
         return obj;
     }
@@ -297,17 +324,19 @@ const collide = target => {
         if (entity.group == target.group) { return; }
         if (entity.inactive) { return; }
         
-        if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x + entity.hitbox.x) { return; }
-        if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y + entity.hitbox.y) { return; }
+        if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x / 2 + entity.hitbox.x / 2) { return; }
+        if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
         if (!entity.health) { return; } 
         entity.damage(1);
         if (target.isProjectile) {
+            target.hit(entity);
             target.pierce -= 1;
             if (target.pierce < 0) { target.destroy(); }
-        }
-    })}
+        } else { target.damage(1); }
+    })
+}
 
-export class projectile {
+class projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         this.name = name;
         this.group = group;
@@ -344,5 +373,16 @@ export class projectile {
     }
     render() {
         draw(this,this.layer,this.buffer);
+    }
+}
+
+export class LaserProjectile extends projectile {
+    constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
+        super(name,group,pos,velocity,size,hitbox,layer,textures);
+    }
+
+    hit(target) {
+        const emit = new LaserHitParticleEmitter("Laserhit",0,target,new v2(0,0),this.textures2,new v2(9,9));
+        for (let i=0;i < 4; i ++) { emit.emit(); }
     }
 }

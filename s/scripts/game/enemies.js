@@ -10,6 +10,12 @@ let waves = [
     {pattern: [
         //{id: "wait",time: 5},
         {id: "enemy",enemy: "smallmeteor",count: 4,time: 5},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 20,time: 3}
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 50,time: 1}
     ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -51,7 +57,7 @@ let enemies = {
         height: 6,
         size: new v2(6,6),
         hitbox: new v2(4,4),
-        health: 1,
+        health: 3,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -80,8 +86,8 @@ let enemies = {
         width: 16,
         height: 16,
         size: new v2(16,16),
-        hitbox: new v2(14,14),
-        health: 3,
+        hitbox: new v2(11,11),
+        health: 10,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -93,7 +99,8 @@ let enemies = {
             }
             e.trot = ClampAngle(e.trot + dt);
             const u = player.pos.sub(e.pos).unit();
-            e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 20));
+            e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 10));
+            e.velocity = e.velocity.sub(e.velocity.multiply(dt / 2));
 
         },
         died: e => {
@@ -141,6 +148,7 @@ const spawnEnemy = id => {
     });
     e.removing = () => {
         table.remove(enemylist,e);
+        enemyCount -= 1;
     }
     table.insert(enemylist,e);
 
