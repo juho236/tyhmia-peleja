@@ -132,6 +132,41 @@ class OrderEmit extends ParticleEmitter {
         particle.pos = this.target.pos.add(transform(this.target.rot,this.offset))
     } 
 }
+class BurstEmit extends ParticleEmitter {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+
+    pframe(particle,dt) {
+        particle.buffer.Draw.globalAlpha = particle.lifetime / 2;
+        particle.rot += Math.sign(particle.rot) * dt * 4;
+        particle.pos = particle.pos.add(particle.velocity.multiply(dt));
+    } 
+}
+
+export class dustParticleEmitter extends BurstEmit {
+    constructor(name,rate,entity,offset,textures,size) {
+        super(name,rate,entity,offset,textures,size);
+    }
+
+    new() {
+        const rot = Math.random() * Math.PI * 2;
+        const obj = {
+            pos: this.target.pos,
+            rot: Math.random() * 2 * Math.PI,
+            size: this.size,
+            velocity: new v2(-Math.sin(rot),Math.cos(rot)).multiply(60 + Math.random() * 40),
+            lifetime: 1,
+            textures: this.textures,
+            buffer: BlankBuffer(this.size.x,this.size.y),
+            path: "dust",
+            options: 1
+        };
+
+        changeTexture(obj,obj.options);
+        return obj;
+    }
+}
 export class trailParticleEmitter extends RandomEmit {
     constructor(name,rate,entity,offset,textures,size) {
         super(name,rate,entity,offset,textures,size);
@@ -184,13 +219,15 @@ export class laserParticleEmitter extends OrderEmit {
 
 
 const changeTexture = (particle,max) => {
-    particle.texture = particle.textures[`${particle.path}${Math.round(Math.random() * max)}`];
+    particle.texture = particle.textures[`${particle.path}${Math.floor(Math.random() * max)}`];
 }
 const transform = (rot,offset) => {
     return new v2(Math.cos(rot) * offset.x - Math.sin(rot) * offset.y,Math.sin(rot) * offset.x + Math.cos(rot) * offset.y);
 }
 
 const draw = (entity,layer,buffer) => {
+    if (entity.invisible) { return; }
+    if (!entity.texture) { return; }
     buffer.Draw.resetTransform();
     buffer.Draw.clearRect(0,0,entity.size.x,entity.size.y);
     const rot = entity.rot;
@@ -226,12 +263,15 @@ export class entity {
     }
     
     destroy() {
-        if (this.destroying) {this.destroying(); }
+        if (this.removing) {this.removing(); }
         Remove(this.event);
         table.remove(entities,this);
+        this.destroyed = true;
     }
     frame(dt) {
-        this.pos = this.pos.add(this.velocity.multiply(dt)).clamp(new v2(0,0), new v2(width, height));
+        this.pos = this.pos.add(this.velocity.multiply(dt));
+        if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
+        this.outside = this.pos.x < -this.size.x || this.pos.x > width + this.size.x || this.pos.y < -this.size.y || this.pos.y > height + this.size.y;
         this.rot = TurnTowards(this.rot,this.trot,dt * this.turnspeed);
         if (this.rot != this.rot) { this.rot = 0; }
 
@@ -251,9 +291,11 @@ export class entity {
 }
 
 const collide = target => {
+    if (target.inactive) { return; }
     table.iterate(entities,entity => {
         if (!entity) { return; }
         if (entity.group == target.group) { return; }
+        if (entity.inactive) { return; }
         
         if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x + entity.hitbox.x) { return; }
         if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y + entity.hitbox.y) { return; }

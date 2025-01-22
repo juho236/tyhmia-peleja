@@ -65,8 +65,19 @@ const frame = () => {
         ClearLayer(Layers.Projectiles);
         ClearLayer(Layers.Enemies);
         ClearLayer(Layers.Player);
-        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate); });
-        renderer();
+
+        try {
+            table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate); });
+        } catch (err) {
+            console.error(err);
+            return;
+        }
+        try {
+            renderer();
+        } catch (err) {
+            console.log(err.message);
+            return;
+        }
     }
 
     window.requestAnimationFrame(frame);

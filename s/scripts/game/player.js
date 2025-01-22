@@ -34,8 +34,8 @@ export const Load = async () => {
             smoke1: "assets/trail-smoke1.png",
         }
     ),5,5)
-    new trailParticleEmitter("LeftFire",60,playerEntity,new v2(-2,8),trailTextures,new v2(5,5));
-    new trailParticleEmitter("RightFire",60,playerEntity,new v2(2,8),trailTextures,new v2(5,5));
+    let trail0 = new trailParticleEmitter("LeftFire",60,playerEntity,new v2(-2,8),trailTextures,new v2(5,5));
+    let trail1 = new trailParticleEmitter("RightFire",60,playerEntity,new v2(2,8),trailTextures,new v2(5,5));
 
     const laserTextures = await TextureBuffers(await LoadTextures(
         {
@@ -72,8 +72,9 @@ export const Load = async () => {
     BindToKeyUp("arrowdown",() => { playerEntity.down = false; });
 
     playerEntity.shoot = false
-    BindToKeyDown("x",() => { playerEntity.shoot = true; });
-    BindToKeyUp("x",() => { playerEntity.shoot = false; });
+    //BindToKeyDown("x",() => { playerEntity.shoot = true; });
+    //BindToKeyUp("x",() => { playerEntity.shoot = false; });
+    BindToKeyUp("x",() => { playerEntity.shoot = !playerEntity.shoot; });
 
     playerEntity.event = AddTick(dt => {
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
@@ -99,11 +100,18 @@ export const Load = async () => {
         playerEntity.render();
     });
 
-    playerEntity.health = 3;
-    playerEntity.maxhealth = 3;
+    playerEntity.health = 5;
     playerEntity.removing = () => {
         Load();
     }
+    playerEntity.died = () => {
+        playerEntity.invisible = true;
+        playerEntity.inactive = true;
+
+        trail0.rate = 0;
+        trail1.rate = 0;
+    }
+
     SetPlayer(playerEntity);
     LoadWave();
 }
