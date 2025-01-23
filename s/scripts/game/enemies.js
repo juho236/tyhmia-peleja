@@ -7,15 +7,15 @@ import { Layers, height, width } from "../renderer/render.js";
 let waveIndex = 0;
 
 let waves = [
+    //{pattern: [
+    //    //{id: "wait",time: 5},
+    //    {id: "enemy",enemy: "smallmeteor",count: 4,time: 5},
+    //]},
+    //{pattern: [
+    //    {id: "enemy",enemy: "smallmeteor",count: 20,time: 3}
+    //]},
     {pattern: [
-        //{id: "wait",time: 5},
-        {id: "enemy",enemy: "smallmeteor",count: 4,time: 5},
-    ]},
-    {pattern: [
-        {id: "enemy",enemy: "smallmeteor",count: 20,time: 3}
-    ]},
-    {pattern: [
-        {id: "enemy",enemy: "smallmeteor",count: 50,time: 1}
+        {id: "enemy",enemy: "smallmeteor",count: 50,time: 0.1}
     ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -99,8 +99,8 @@ let enemies = {
             }
             e.trot = ClampAngle(e.trot + dt);
             const u = player.pos.sub(e.pos).unit();
-            e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 10));
-            e.velocity = e.velocity.sub(e.velocity.multiply(dt / 2));
+            e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 50));
+            e.velocity = e.velocity.sub(e.velocity.multiply(dt));
 
         },
         died: e => {
@@ -115,7 +115,7 @@ let enemies = {
                 
                 spawn.pos = e.pos;
                 const rot = a * Math.PI * 2;
-                spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60);
+                spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
             }
             e.invisible = true;
             e.removetimer = 4;

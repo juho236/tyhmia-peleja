@@ -48,6 +48,7 @@ let renderer;
 export const setRenderer = r => {
     renderer = r;
 }
+
 const frame = () => {
     if (!run) { return; }
 
@@ -62,6 +63,7 @@ const frame = () => {
         frameTime -= 1;
         ticks -= 1;
 
+        let startTime = time();
         ClearLayer(Layers.Projectiles);
         ClearLayer(Layers.Enemies);
         ClearLayer(Layers.Player);
@@ -78,6 +80,9 @@ const frame = () => {
             console.log(err.message);
             return;
         }
+
+        let totalTime = time() - startTime;
+        //if (totalTime > 0.001) { console.log(totalTime); }
     }
 
     window.requestAnimationFrame(frame);

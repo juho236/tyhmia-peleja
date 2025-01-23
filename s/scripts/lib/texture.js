@@ -32,6 +32,8 @@ export const TextureBuffers = async (blobs, width, height) => {
             textures -= 1;
             list[blob[0]] = buffer;
             if (textures > 0) { return; }
+
+            list.flash = ColorCopy(list.default,255,255,255);
             completed(list);
         });
     });
@@ -55,6 +57,27 @@ const seturl = async (img,url) => {
     });
 
     await p;
+}
+
+
+export const ColorCopy = (buffer, r, g, b) => {
+    if (!buffer) { return; }
+
+    let w = buffer.Buffer.width;
+    let h = buffer.Buffer.height;
+
+    const imgData = buffer.Draw.getImageData(0,0,w,h);
+    for (let p = 0; p < imgData.data.length; p += 4) {
+        if (imgData.data[p + 3] <= 0) { continue; }
+        imgData.data[p] = r;
+        imgData.data[p + 1] = g;
+        imgData.data[p + 2] = b;
+        imgData.data[p + 3] = 255;
+    }
+
+    const copy = BlankBuffer(w,h);
+    copy.Draw.putImageData(imgData,0,0);
+    return copy;
 }
 
 

@@ -1,7 +1,7 @@
 import { Add, Remove } from "../engine/frame.js";
 import { height, width } from "../renderer/render.js";
 import { table } from "./table.js";
-import { BlankBuffer } from "./texture.js";
+import { BlankBuffer, ColorCopy } from "./texture.js";
 
 export class v2 {
     constructor(x,y) {
@@ -254,12 +254,16 @@ const transform = (rot,offset) => {
 
 const draw = (entity,layer,buffer) => {
     if (entity.invisible) { return; }
+    let texture = entity.texture;
+    if (entity.flash) { texture = entity.flashtexture; }
     if (!entity.texture) { return; }
+
+    if (entity.iframes) { buffer.Draw.globalAlpha = 0.5 + Math.round(entity.iframes % 0.25 * 4) / 2; }
     buffer.Draw.resetTransform();
     buffer.Draw.clearRect(0,0,entity.size.x,entity.size.y);
     const rot = entity.rot;
     buffer.Draw.setTransform(Math.cos(rot),Math.sin(rot),-Math.sin(rot),Math.cos(rot),entity.size.x / 2,entity.size.y / 2);
-    buffer.Draw.drawImage(entity.texture.Buffer,-entity.size.x / 2,-entity.size.y / 2);
+    buffer.Draw.drawImage(texture.Buffer,-entity.size.x / 2,-entity.size.y / 2);
 
     layer.Draw.drawImage(buffer.Buffer,Math.round(entity.pos.x - entity.size.x / 2),Math.round(entity.pos.y - entity.size.y / 2));
 }
@@ -273,6 +277,7 @@ export class entity {
         this.layer = layer;
         this.buffer = BlankBuffer(size.x,size.y);
         this.textures = textures;
+        this.flashtexture = textures.flash;
         this.pos = new v2(0,0);
         this.velocity = new v2(0,0);
         this.size = size;
@@ -284,8 +289,13 @@ export class entity {
     }
     emitters = [];
 
-    damage(dmg) {
+    damage(dmg, damager) {
+        if (this.iframes && !damager.ignoreIframes) { return; }
         this.health -= dmg;
+        this.flash = 0.1;
+        this.iframes = this.inv;
+
+        if (damager) { this.velocity = this.velocity.add(damager.velocity.multiply(0.1).add(this.pos.sub(damager.pos).unit().multiply(50))); }
         if (this.health <= 0) { this.died(); }
     }
     
@@ -296,6 +306,9 @@ export class entity {
         this.destroyed = true;
     }
     frame(dt) {
+        if (this.flash) { this.flash -= dt; if (this.flash <= 0) { this.flash = null; }}
+        if (this.iframes) { this.iframes -= dt; if (this.iframes <= 0) { this.iframes = null; this.buffer.Draw.globalAlpha = 1; }}
+
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
         this.outside = this.pos.x < -this.size.x || this.pos.x > width + this.size.x || this.pos.y < -this.size.y || this.pos.y > height + this.size.y;
@@ -321,18 +334,25 @@ const collide = target => {
     if (target.inactive) { return; }
     table.iterate(entities,entity => {
         if (!entity) { return; }
-        if (entity.group == target.group) { return; }
         if (entity.inactive) { return; }
+        if (target == entity) { return; }
         
         if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x / 2 + entity.hitbox.x / 2) { return; }
         if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
+
+        if (!entity.isProjectile) {
+            target.velocity = target.velocity.add(target.pos.sub(entity.pos).unit().multiply(10).add(entity.velocity.multiply(0.1)));
+        }
+        if (entity.group == target.group) { return; }
         if (!entity.health) { return; } 
-        entity.damage(1);
+        entity.damage(1, target);
         if (target.isProjectile) {
             target.hit(entity);
             target.pierce -= 1;
             if (target.pierce < 0) { target.destroy(); }
-        } else { target.damage(1); }
+        } else {
+            target.damage(1,entity);
+        }
     })
 }
 
@@ -379,10 +399,13 @@ class projectile {
 export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
+
+        this.pierce = 0;
+        this.ignoreIframes = true;
     }
 
     hit(target) {
         const emit = new LaserHitParticleEmitter("Laserhit",0,target,new v2(0,0),this.textures2,new v2(9,9));
-        for (let i=0;i < 4; i ++) { emit.emit(); }
+        for (let i=0;i < 2; i ++) { emit.emit(); }
     }
 }
