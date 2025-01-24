@@ -37,6 +37,12 @@ const time = () => {
     return (new Date()).getTime() / 1000;
 }
 
+const waitForFrame = async () => {
+    await new Promise(completed => {
+        window.requestAnimationFrame(completed);
+    });
+}
+
 let frameRate = 30;
 let frameTime = 0;
 
@@ -53,7 +59,7 @@ const frame = () => {
     if (!run) { return; }
 
     const t = time();
-    const dt = t - lastTime;
+    const dt = Math.min(0.05,t - lastTime);
     lastTime = t;
 
     frameTime += dt * frameRate;
@@ -77,12 +83,11 @@ const frame = () => {
         try {
             renderer();
         } catch (err) {
-            console.log(err.message);
+            console.error(err);
             return;
         }
 
         let totalTime = time() - startTime;
-        //if (totalTime > 0.001) { console.log(totalTime); }
     }
 
     window.requestAnimationFrame(frame);

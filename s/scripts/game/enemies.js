@@ -1,22 +1,36 @@
 import { Add, Remove } from "../engine/frame.js";
-import { ClampAngle, dustParticleEmitter, entity, v2 } from "../lib/classes.js";
+import { ClampAngle, ExplosionProjectile, dustParticleEmitter, entity, fireParticleEmitter, v2 } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, height, width } from "../renderer/render.js";
 
-let waveIndex = 0;
+let waveIndex = 5;
 
 let waves = [
-    //{pattern: [
-    //    //{id: "wait",time: 5},
-    //    {id: "enemy",enemy: "smallmeteor",count: 4,time: 5},
-    //]},
-    //{pattern: [
-    //    {id: "enemy",enemy: "smallmeteor",count: 20,time: 3}
-    //]},
     {pattern: [
-        {id: "enemy",enemy: "smallmeteor",count: 50,time: 0.1}
-    ]}
+        //{id: "wait",time: 5},
+        {id: "enemy",enemy: "smallmeteor",count: 4,time: 5},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 15,time: 3}
+    ]},
+    {checkpoint: true, pattern: [
+        {id: "enemy",enemy: "tinymeteor",count: 10,time: 1},
+        {id: "enemy",enemy: "smallmeteor",count: 20,time: 1},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "tinymeteor",count: 100,time: 0.1},
+        {id: "waitAll"},
+        {id: "enemy",enemy: "tinymeteor",count: 100,time: 0},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 100,time: 0}
+    ]},
+    {pattern: [
+        //{id: "enemy",enemy: "mine",count: 5,time: 3},
+        {id: "enemy",enemy: "smallmeteor",count: 25,time: 0},
+        {id: "enemy",enemy: "mine",count: 5,time: 1},
+    ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -46,20 +60,66 @@ const parts = {
 
 let enemyCount = 0;
 let enemies = {
+    fire: {
+        textures: {
+            full0: "assets/trail-full0.png",
+            full1: "assets/trail-full1.png",
+            full2: "assets/trail-full2.png",
+            full3: "assets/trail-full3.png",
+            smoke0: "assets/trail-smoke0.png",
+            smoke1: "assets/trail-smoke1.png",
+        },
+        width: 5,
+        height: 5
+    },
     dust: {
         textures: {dust0: "assets/trail-smoke0.png", dust1: "assets/trail-smoke1.png"},
         width: 5,
         height: 5,
+    },
+    mine: {
+        textures: {default: "assets/mine-small1.png"},
+        width: 8,
+        height: 8,
+        size: new v2(8,8),
+        hitbox: new v2(12,12),
+        health: 1,
+        ai: (e, dt) => {
+            if (e.removetimer) {
+                e.removetimer -= dt;
+                if (e.removetimer > 0) { return; }
+
+                e.destroy();
+                return;
+            }
+
+            e.trot = ClampAngle(e.trot + dt * 1);
+
+            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 200));
+            e.velocity = e.velocity.sub(e.velocity.multiply(dt * 2));
+        },
+        load: e => {
+            e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+        },
+        died: e => {
+            e.inactive = true;
+            e.invisible = true;
+            e.removetimer = 5;
+            
+            for (let i=0;i < 64; i ++) { e.explosion.emit(); }
+            e.velocity = new v2(0,0);
+            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),new v2(64,64),e.layer);
+        }
     },
     tinymeteor: {
         textures: {default: "assets/meteor-tiny1.png"},
         width: 6,
         height: 6,
         size: new v2(6,6),
-        hitbox: new v2(4,4),
-        health: 3,
+        hitbox: new v2(5,5),
+        health: 2,
         oob: true,
-        ai: (e,dt) => {
+        ai: (e, dt) => {
             if (e.removetimer) {
                 e.removetimer -= dt;
                 if (e.removetimer > 0) { return; }
@@ -71,14 +131,21 @@ let enemies = {
             
             if (e.outside) { e.destroy(); }
         },
+        load: e => {
+            e.velocity = player.pos.sub(e.pos).unit().multiply(120);
+            e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+        },
+        ondamage: e => {
+            e.dust.emit();
+        },
         died: e => {
             e.inactive = true;
             e.invisible = true;
             e.removetimer = 4;
-            e.velocity = new v2(0,0);
             
-            const emit = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-            for (let i=0;i < 8; i ++) { emit.emit(); }
+            
+            for (let i=0;i < 4; i ++) { e.dust.emit(); }
+            e.velocity = new v2(0,0);
         }
     },
     smallmeteor: {
@@ -87,7 +154,7 @@ let enemies = {
         height: 16,
         size: new v2(16,16),
         hitbox: new v2(11,11),
-        health: 10,
+        health: 8,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -103,9 +170,14 @@ let enemies = {
             e.velocity = e.velocity.sub(e.velocity.multiply(dt));
 
         },
+        load: e => {
+            e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+        },
+        ondamage: e => {
+            e.dust.emit();
+        },
         died: e => {
             e.inactive = true;
-            e.velocity = new v2(0,0);
 
             const s = 3;
             const b = Math.random();
@@ -113,15 +185,15 @@ let enemies = {
                 const a = i / s + b;
                 const spawn = spawnEnemy("tinymeteor");
                 
-                spawn.pos = e.pos;
                 const rot = a * Math.PI * 2;
+                spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
                 spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
             }
             e.invisible = true;
             e.removetimer = 4;
             
-            const emit = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-            for (let i=0;i < 32; i ++) { emit.emit(); }
+            for (let i=0;i < 15; i ++) { e.dust.emit(); }
+            e.velocity = new v2(0,0);
         }
     }
 }
@@ -140,7 +212,9 @@ const spawnEnemy = id => {
     e.oob = enemy.oob;
     e.pos = new v2(Math.random() * width, -20);
 
+    if (enemy.load) { enemy.load(e); }
     e.died = () => { enemy.died(e); }
+    e.ondamage = enemy.ondamage;
     e.event = Add(dt => {
         enemy.ai(e,dt);
         e.frame(dt);
@@ -166,7 +240,7 @@ const wavePart = async (pattern,index) => {
 const spawnWave = async index => {
     const wave = waves[index];
 
-    if (wave.Checkpoint) { waveIndex = index; }
+    if (wave.checkpoint) { waveIndex = index; }
     try {
         await wavePart(wave.pattern,0);
         spawnWave(index + 1);

@@ -1,7 +1,7 @@
 import { Layers, width, height, GetMouse } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
-import { v2, entity, trailParticleEmitter, laserParticleEmitter, LaserProjectile } from "../lib/classes.js";
+import { v2, entity, laserParticleEmitter, LaserProjectile } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
@@ -26,19 +26,6 @@ export const Load = async () => {
             default: "assets/laser1.png"
         }
     ),16,16)
-
-    const trailTextures = await TextureBuffers(await LoadTextures(
-        {
-            full0: "assets/trail-full0.png",
-            full1: "assets/trail-full1.png",
-            full2: "assets/trail-full2.png",
-            full3: "assets/trail-full3.png",
-            smoke0: "assets/trail-smoke0.png",
-            smoke1: "assets/trail-smoke1.png",
-        }
-    ),5,5);
-    //let trail0 = new trailParticleEmitter("LeftFire",60,playerEntity,new v2(-2,8),trailTextures,new v2(5,5));
-    //let trail1 = new trailParticleEmitter("RightFire",60,playerEntity,new v2(2,8),trailTextures,new v2(5,5));
 
     lasertextures2 = await TextureBuffers(await LoadTextures(
         {

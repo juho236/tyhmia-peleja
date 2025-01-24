@@ -26,16 +26,15 @@ class Star {
         this.buffer = texture;
     }
     relocate() {
-        this.position.y = -5;
+        this.position.y = -2;
         this.position.x = Math.random() * width;
     }
 
     frame(dt) {
         let scale = this.scale;
-        this.position = this.position.add(new v2((this.position.x - width / 2) / width * dt * speed * scale,speed * dt * scale));
+        this.position = this.position.add(new v2((this.position.x - width) / width * dt * speed * scale / 64,speed * dt * scale / 4));
 
-        if (this.position.x > -4 && this.position.x < width + 4) { return; }
-        if (this.position.y < height + 4) { return; }
+        if (this.position.x > -4 && this.position.x < width + 4 && this.position.y < height + 4) { return; }
 
         this.relocate();
     }
@@ -55,12 +54,12 @@ const createStars = texture => {
         table.insert(stars,star);
     }
     for (let i=0; i < 16; i ++) {
-        let star = new Star(texture,new v2(Math.random() * width,Math.random() * height),0.4 + Math.random() / 25);
+        let star = new Star(texture,new v2(Math.random() * width,Math.random() * height),0.4 + Math.random() / 20);
 
         table.insert(stars,star);
     }
     for (let i=0; i < 16; i ++) {
-        let star = new Star(texture,new v2(Math.random() * width,Math.random() * height),0.2 + Math.random() / 35);
+        let star = new Star(texture,new v2(Math.random() * width,Math.random() * height),0.2 + Math.random() / 25);
 
         table.insert(stars,star);
     }

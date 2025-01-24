@@ -28,6 +28,9 @@ export class v2 {
         const d = Math.sqrt(this.x * this.x + this.y * this.y);
         return new v2(this.x / d, this.y / d);
     }
+    magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
 }
 
 export const ClampAngle = angle => {
@@ -44,9 +47,15 @@ export const TurnTowards = (angle,targetAngle,speed) => {
     return ClampAngle(angle + u * speed);
 }
 
+let particlePriority = [];
+const remove = async particle => {
+    table.remove(particle.emitter.particles,particle);
+    table.remove(particlePriority,particle);
+}
 
 class ParticleEmitter {
     constructor(name,rate,entity,offset,textures,size) {
+        if (!entity.emitters) { return; }
         this.name = name;
         
         this.size = size;
@@ -60,7 +69,12 @@ class ParticleEmitter {
     cooldown = 0;
 
     emit() {
-        table.insert(this.particles,this.new());
+        const p = this.new();
+        p.emitter = this;
+        if (p.velocity) { p.velocity = p.velocity.add(this.target.velocity); }
+        const e = table.add(particlePriority,p,0);
+        if (e > 200) { table.iterate(particlePriority,remove,200); }
+        table.insert(this.particles,p);
     }
 
     frame(dt) {
@@ -75,7 +89,7 @@ class ParticleEmitter {
 
             particle.lifetime -= dt;
             if (particle.lifetime <= 0) {
-                table.remove(this.particles,particle);
+                remove(particle);
                 return;
             }
 
@@ -111,7 +125,6 @@ class RandomEmit extends ParticleEmitter {
         }
         particle.rot += Math.sign(particle.rot) * dt * 4;
         particle.pos = particle.pos.add(particle.velocity.multiply(dt));
-        particle.velocity = particle.velocity.add(new v2(0,this.target.speed / 100).multiply(dt));
     } 
 }
 class OrderEmit extends ParticleEmitter {
@@ -167,18 +180,18 @@ export class dustParticleEmitter extends BurstEmit {
         return obj;
     }
 }
-export class trailParticleEmitter extends RandomEmit {
+export class fireParticleEmitter extends RandomEmit {
     constructor(name,rate,entity,offset,textures,size) {
         super(name,rate,entity,offset,textures,size);
     }
 
     new() {
-        const rot = this.target.rot + (Math.random() - 0.5) / 2;
+        const rot = Math.random() * Math.PI * 2;
         const obj = {
-            pos: this.target.pos.add(transform(rot,this.offset)),
+            pos: this.target.pos,
             rot: Math.random() * 2 * Math.PI,
             size: this.size,
-            velocity: new v2(-Math.sin(rot),Math.cos(rot)).multiply(60 + Math.random() * 40),
+            velocity: new v2(-Math.sin(rot),Math.cos(rot)).multiply(120 + Math.random() * 90),
             lifetime: 1,
             textures: this.textures,
             buffer: BlankBuffer(this.size.x,this.size.y),
@@ -216,7 +229,8 @@ export class laserParticleEmitter extends OrderEmit {
     oframe(dt) {
         
     }
-}class LaserHitParticleEmitter extends OrderEmit {
+}
+class LaserHitParticleEmitter extends OrderEmit {
     constructor(name,rate,entity,offset,textures,size) {
         super(name,rate,entity,offset,textures,size);
     }
@@ -295,7 +309,7 @@ export class entity {
         this.flash = 0.1;
         this.iframes = this.inv;
 
-        if (damager) { this.velocity = this.velocity.add(damager.velocity.multiply(0.1).add(this.pos.sub(damager.pos).unit().multiply(50))); }
+        if (this.ondamage) { this.ondamage(this); }
         if (this.health <= 0) { this.died(); }
     }
     
@@ -311,7 +325,7 @@ export class entity {
 
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
-        this.outside = this.pos.x < -this.size.x || this.pos.x > width + this.size.x || this.pos.y < -this.size.y || this.pos.y > height + this.size.y;
+        this.outside = this.pos.x < -this.size.x - 64 || this.pos.x > width + this.size.x + 64 || this.pos.y < -this.size.y - 64 || this.pos.y > height + this.size.y + 64;
         this.rot = TurnTowards(this.rot,this.trot,dt * this.turnspeed);
         if (this.rot != this.rot) { this.rot = 0; }
 
@@ -330,9 +344,24 @@ export class entity {
     }
 }
 
+const collision = (entity1, entity2) => {
+    if ((entity1.nosamegroup || entity2.nosamegroup) && entity1.group == entity2.group) { return; }
+    let weight1 = entity1.weight || 1, weight2 = entity2.weight || 1;
+    let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2)).multiply(1 / (weight1 + weight2));
+
+    entity1.velocity = vel;
+    entity2.velocity = vel;
+
+    if (entity1.group == entity2.group) { return; }
+    
+    entity1.damage(entity2.dmg || 1,entity2);
+    entity2.damage(entity1.dmg || 1,entity1);
+}
+
+
 const collide = target => {
     if (target.inactive) { return; }
-    table.iterate(entities,entity => {
+    table.iterate(entities,async entity => {
         if (!entity) { return; }
         if (entity.inactive) { return; }
         if (target == entity) { return; }
@@ -340,19 +369,7 @@ const collide = target => {
         if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x / 2 + entity.hitbox.x / 2) { return; }
         if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
 
-        if (!entity.isProjectile) {
-            target.velocity = target.velocity.add(target.pos.sub(entity.pos).unit().multiply(10).add(entity.velocity.multiply(0.1)));
-        }
-        if (entity.group == target.group) { return; }
-        if (!entity.health) { return; } 
-        entity.damage(1, target);
-        if (target.isProjectile) {
-            target.hit(entity);
-            target.pierce -= 1;
-            if (target.pierce < 0) { target.destroy(); }
-        } else {
-            target.damage(1,entity);
-        }
+        collision(target,entity);
     })
 }
 
@@ -383,7 +400,15 @@ class projectile {
         table.remove(entities,this);
     }
     
+    damage(dmg,target) {
+        this.hit(target);
+        this.pierce -= 1;
+        if (this.pierce >= 0) { return; }
+        this.destroy();
+    }
     frame(dt) {
+        this.lifetime -= dt;
+        if (this.lifetime <= 0) { this.destroy(); return; }
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if ((this.pos.x < -this.size.x || this.pos.x > width + this.size.x) || (this.pos.y < -this.size.y || this.pos.y > height + this.size.y)) {
             this.destroy();
@@ -400,12 +425,31 @@ export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        this.pierce = 0;
+        //this.pierce = 999;
+        this.dmg = 1;
+        this.nosamegroup = true;
+        this.weight = 0.5;
         this.ignoreIframes = true;
+        this.lifetime = 5;
     }
 
     hit(target) {
+        if (!target.emitters) { return; }
         const emit = new LaserHitParticleEmitter("Laserhit",0,target,new v2(0,0),this.textures2,new v2(9,9));
         for (let i=0;i < 2; i ++) { emit.emit(); }
+    }
+}
+export class ExplosionProjectile extends projectile {
+    constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
+        super(name,group,pos,velocity,size,hitbox,layer,textures);
+
+        this.lifetime = 0.5;
+        this.pierce = 9999;
+        this.weight = 9999999;
+        this.nosamegroup = true;
+    }
+
+    hit(target) {
+
     }
 }
