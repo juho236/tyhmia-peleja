@@ -31,6 +31,9 @@ export class v2 {
     magnitude() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
+    abs() {
+        return new v2(Math.abs(this.x),Math.abs(this.y));
+    }
 }
 
 export const ClampAngle = angle => {
@@ -358,7 +361,17 @@ const collision = (entity1, entity2) => {
     entity2.damage(entity1.dmg || 1,entity1);
 }
 
+const intersectCircle = (circle, rect) => {
+    const d = circle.pos.sub(rect.pos).abs();
 
+    if (d.x > circle.hitbox + rect.hitbox.x / 2) { return false; }
+    if (d.y > circle.hitbox + rect.hitbox.y / 2) { return false; }
+
+    if (d.x < rect.hitbox.x / 2) { return true; }
+    if (d.y < rect.hitbox.y / 2) { return true; }
+
+    return d.sub(rect.hitbox.multiply(0.5)).magnitude() <= (circle.hitbox * circle.hitbox);
+}
 const collide = target => {
     if (target.inactive) { return; }
     table.iterate(entities,async entity => {
@@ -366,8 +379,20 @@ const collide = target => {
         if (entity.inactive) { return; }
         if (target == entity) { return; }
         
-        if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x / 2 + entity.hitbox.x / 2) { return; }
-        if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
+        if (typeof entity.hitbox == "number") {
+            if (typeof target.hitbox == "number") {
+                if (entity.pos.sub(target.pos).magnitude() > target.hitbox + entity.hitbox) { return; }
+            } else {
+                if (!intersectCircle(entity,target)) { return; }
+            }
+        } else {
+            if (typeof target.hitbox == "number") {
+                if (!intersectCircle(target,entity)) { return; }
+            } else {
+                if (Math.abs(target.pos.x - entity.pos.x) > target.hitbox.x / 2 + entity.hitbox.x / 2) { return; }
+                if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
+            }
+        }
 
         collision(target,entity);
     })

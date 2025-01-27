@@ -27,7 +27,8 @@ let waves = [
         {id: "enemy",enemy: "smallmeteor",count: 100,time: 0}
     ]},
     {pattern: [
-        //{id: "enemy",enemy: "mine",count: 5,time: 3},
+        {id: "enemy",enemy: "mine",count: 5,time: 3},
+        {id: "waitAll"},
         {id: "enemy",enemy: "smallmeteor",count: 25,time: 0},
         {id: "enemy",enemy: "mine",count: 5,time: 1},
     ]},
@@ -77,12 +78,34 @@ let enemies = {
         width: 5,
         height: 5,
     },
+    missile: {
+        textures: {default: "assets/mine-small.png"},
+        width: 8,
+        height: 8,
+        size: new v2(8,8),
+        hitbox: 8,
+        health: 10,
+        load: e => {
+            e.lock = 4;
+            e.velocity = player.pos.sub(e.pos).unit().multiply(40);
+        },
+        ai: (e, dt) => {
+            e.lock -= dt;
+            if (e.lock > 0) { return; }
+            
+            let d = player.pos.sub(e.pos);
+            let t = d.magnitude().
+
+            d = v*t + 1/2*a*t*t
+            //e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * a));
+        }
+    },
     mine: {
         textures: {default: "assets/mine-small1.png"},
         width: 8,
         height: 8,
         size: new v2(8,8),
-        hitbox: new v2(12,12),
+        hitbox: 6,
         health: 1,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -95,8 +118,8 @@ let enemies = {
 
             e.trot = ClampAngle(e.trot + dt * 1);
 
-            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 200));
-            e.velocity = e.velocity.sub(e.velocity.multiply(dt * 2));
+            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 500));
+            e.velocity = e.velocity.sub(e.velocity.multiply(dt * 1));
         },
         load: e => {
             e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
@@ -108,7 +131,7 @@ let enemies = {
             
             for (let i=0;i < 64; i ++) { e.explosion.emit(); }
             e.velocity = new v2(0,0);
-            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),new v2(64,64),e.layer);
+            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),92,e.layer);
         }
     },
     tinymeteor: {
