@@ -2,9 +2,9 @@ import { Add, Remove } from "../engine/frame.js";
 import { ClampAngle, ExplosionProjectile, dustParticleEmitter, entity, fireParticleEmitter, v2 } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
-import { Layers, height, width } from "../renderer/render.js";
+import { Layers, Shake, height, width } from "../renderer/render.js";
 
-let waveIndex = 5;
+let waveIndex = 4;
 
 let waves = [
     {pattern: [
@@ -26,12 +26,23 @@ let waves = [
     {pattern: [
         {id: "enemy",enemy: "smallmeteor",count: 100,time: 0}
     ]},
-    {pattern: [
+    {checkpoint: true, pattern: [
         {id: "enemy",enemy: "mine",count: 5,time: 3},
         {id: "waitAll"},
-        {id: "enemy",enemy: "smallmeteor",count: 25,time: 0},
-        {id: "enemy",enemy: "mine",count: 5,time: 1},
+        {id: "enemy",enemy: "smallmeteor",count: 25,time: 0.5, parallel: true},
+        {id: "enemy",enemy: "mine",count: 6,time: 5},
     ]},
+    {pattern: [
+        {id: "enemy",enemy: "missile",count: 5,time: 3},
+    ]},
+    {checkpoint: true, pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 100,time: 0.25, parallel: true},
+        {id: "enemy",enemy: "missile",count: 9,time: 5}
+    ]},
+    {checkpoint: true, pattern: [
+        {id: "enemy",enemy: "mine",count: 5,time: 3,parallel: true},
+        {id: "enemy",enemy: "missile",count: 5,time: 3},
+    ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -45,7 +56,6 @@ const parts = {
         });
     },
     enemy: async obj => {
-        let a = attemptId;
         for (let i=0; i < obj.count; i ++) {
             spawnEnemy(obj.enemy);
             await parts.wait(obj);
@@ -79,25 +89,54 @@ let enemies = {
         height: 5,
     },
     missile: {
-        textures: {default: "assets/mine-small.png"},
+        textures: {default: "assets/mine-small1.png"},
         width: 8,
         height: 8,
         size: new v2(8,8),
-        hitbox: 8,
-        health: 10,
+        hitbox: 2,
+        health: 75,
         load: e => {
-            e.lock = 4;
+            e.lock = 5;
+            e.weight = 50;
             e.velocity = player.pos.sub(e.pos).unit().multiply(40);
+            e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+            e.hit = e1 => {
+                if (e1.isProjectile) { return; }
+                e.damage(999,e1);
+            }
         },
         ai: (e, dt) => {
+            if (e.removetimer) {
+                e.removetimer -= dt;
+                if (e.removetimer > 0) { return; }
+
+                e.destroy();
+                return;
+            }
             e.lock -= dt;
             if (e.lock > 0) { return; }
             
-            let d = player.pos.sub(e.pos);
-            let t = d.magnitude().
+            e.hitbox = 24;
 
-            d = v*t + 1/2*a*t*t
+            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
+
+            //let d = player.pos.sub(e.pos).abs();
+            //d = player.pos.add(player.velocity.multiplyv2(t)).sub(e.pos);
+            //if (t.x == 0 || t.y == 0) { return; }
+
+
+            //e.velocity = e.velocity.add(new v2((d.x * 2) / (t.x * t.x),(d.y * 2) / (t.y * t.y)).multiply(dt));
+            //e.velocity = e.velocity.add(new v2((d.x - e.velocity.x * t.x * 2) / (t.x * t.x),(d.y - e.velocity.y * t.y * 2) / (t.y * t.y)).multiply(dt));
             //e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * a));
+        },
+        died: e => {
+            e.inactive = true;
+            e.invisible = true;
+            e.removetimer = 5;
+            
+            for (let i=0;i < 128; i ++) { e.explosion.emit(); }
+            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),64,e.layer);
+            e.velocity = new v2(0,0);
         }
     },
     mine: {
@@ -106,7 +145,7 @@ let enemies = {
         height: 8,
         size: new v2(8,8),
         hitbox: 6,
-        health: 1,
+        health: 25,
         ai: (e, dt) => {
             if (e.removetimer) {
                 e.removetimer -= dt;
@@ -118,7 +157,7 @@ let enemies = {
 
             e.trot = ClampAngle(e.trot + dt * 1);
 
-            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 500));
+            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 300));
             e.velocity = e.velocity.sub(e.velocity.multiply(dt * 1));
         },
         load: e => {
@@ -129,9 +168,9 @@ let enemies = {
             e.invisible = true;
             e.removetimer = 5;
             
-            for (let i=0;i < 64; i ++) { e.explosion.emit(); }
+            for (let i=0;i < 128; i ++) { e.explosion.emit(); }
             e.velocity = new v2(0,0);
-            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),92,e.layer);
+            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),48,e.layer);
         }
     },
     tinymeteor: {
@@ -140,7 +179,8 @@ let enemies = {
         height: 6,
         size: new v2(6,6),
         hitbox: new v2(5,5),
-        health: 2,
+        health: 5,
+        dmg: 2,
         oob: true,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -160,11 +200,13 @@ let enemies = {
         },
         ondamage: e => {
             e.dust.emit();
+            Shake(0.1,0.5);
         },
         died: e => {
             e.inactive = true;
             e.invisible = true;
             e.removetimer = 4;
+            Shake(0.5,0.5);
             
             
             for (let i=0;i < 4; i ++) { e.dust.emit(); }
@@ -177,7 +219,8 @@ let enemies = {
         height: 16,
         size: new v2(16,16),
         hitbox: new v2(11,11),
-        health: 8,
+        health: 40,
+        dmg: 8,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -198,9 +241,11 @@ let enemies = {
         },
         ondamage: e => {
             e.dust.emit();
+            Shake(0.4,0.5);
         },
         died: e => {
             e.inactive = true;
+            Shake(1,0.5);
 
             const s = 3;
             const b = Math.random();
@@ -232,6 +277,7 @@ const spawnEnemy = id => {
     e.group = "Enemy";
     e.health = enemy.health;
     e.texture = enemy.textures.default;
+    e.dmg = enemy.dmg;
     e.oob = enemy.oob;
     e.pos = new v2(Math.random() * width, -20);
 
@@ -257,7 +303,10 @@ const wavePart = async (pattern,index) => {
 
     if (!part) { return; }
 
-    await parts[part.id](part);
+    if (part.parallel) {
+        try { parts[part.id](part) } catch {};
+    } else { await parts[part.id](part); }
+    
     await wavePart(pattern,index + 1);
 }
 const spawnWave = async index => {

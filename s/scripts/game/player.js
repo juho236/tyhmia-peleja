@@ -1,11 +1,12 @@
-import { Layers, width, height, GetMouse } from "../renderer/render.js";
+import { Layers, width, height, GetMouse, Shake } from "../renderer/render.js";
 import { Add as AddTick } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
-import { v2, entity, laserParticleEmitter, LaserProjectile } from "../lib/classes.js";
+import { v2, entity, laserParticleEmitter, LaserProjectile, dustParticleEmitter, fireParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 import { LoadWave, SetPlayer } from "./enemies.js";
+import { UILayer, Frame, Scale2, Anchor, Color } from "../engine/ui.js";
 
 
 let lasertextures;
@@ -26,6 +27,23 @@ export const Load = async () => {
             default: "assets/laser1.png"
         }
     ),16,16)
+    let scrap = await TextureBuffers(await LoadTextures(
+        {
+            dust0: "assets/scrap0.png",
+            dust1: "assets/scrap1.png",
+            dust2: "assets/scrap2.png",
+        }
+    ),4,4);
+    let explode = await TextureBuffers(await LoadTextures(
+        {
+            full0: "assets/trail-full0.png",
+            full1: "assets/trail-full1.png",
+            full2: "assets/trail-full2.png",
+            full3: "assets/trail-full3.png",
+            smoke0: "assets/trail-smoke0.png",
+            smoke1: "assets/trail-smoke1.png",
+        }
+    ),5,5);
 
     lasertextures2 = await TextureBuffers(await LoadTextures(
         {
@@ -61,7 +79,11 @@ export const Load = async () => {
     BindToKeyDown("s",() => { playerEntity.down = true; });
     BindToKeyUp("s",() => { playerEntity.down = false; });
 
+    BindToKeyUp("r",() => { if (playerEntity.deathtimer && playerEntity.deathtimer <= 0) { playerEntity.destroy(); } })
+
+
     playerEntity.event = AddTick(dt => {
+        if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; }
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
 
@@ -76,7 +98,7 @@ export const Load = async () => {
         }
 
         if (playerEntity.shootTimer > 0) { playerEntity.shootTimer -= dt * playerEntity.shootspeed; }
-        if (playerEntity.shootTimer <= 0) {
+        if (playerEntity.shootTimer <= 0 && !playerEntity.inactive) {
             playerEntity.shootTimer += 1;
             shoot(playerEntity,playerEntity.rot);
         }
@@ -86,17 +108,48 @@ export const Load = async () => {
         playerEntity.render();
     });
 
-    playerEntity.health = 5;
+    playerEntity.maxhealth = 100;
+    playerEntity.health = playerEntity.maxhealth;
+
+    let hud = new UILayer(Layers.hud);
+    hud.children = {
+        healthbar: new Frame({size: new Scale2(0,64,0,16), pos: new Scale2(1,0,1,0), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
+            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(255,0,0,0)},{
+                bar: new Frame({size: new Scale2(1,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(0,255,0,0)})
+            })
+        }),
+        //death: new Frame({size: new Scale2(0,128,)})
+    }
+    hud.redraw();
+    let healthbar = hud.children.healthbar.children.inset.children.bar;
+    let death = hud.children.death;
+
+
     playerEntity.removing = () => {
         Load();
     }
     playerEntity.died = () => {
         playerEntity.invisible = true;
         playerEntity.inactive = true;
+        playerEntity.deathtimer = 1;
+        Shake(25,2);
+        Shake(50,0.5);
+
+        for (let i=0;i<32;i++) { playerEntity.scraps.emit(); }
+        for (let i=0;i<128;i++) { playerEntity.explode.emit(); }
 
         //trail0.rate = 0;
         //trail1.rate = 0;
-        playerEntity.destroy();
+        //playerEntity.destroy();
+    }
+
+    playerEntity.scraps = new dustParticleEmitter("Scrap",0,playerEntity,new v2(0,0),scrap,new v2(4,4));
+    playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
+
+    playerEntity.ondamage = (p,dmg) => {
+        healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
+        Shake(dmg / 2,0.5);
+        hud.redraw();
     }
 
     SetPlayer(playerEntity);

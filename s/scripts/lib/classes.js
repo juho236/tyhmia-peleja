@@ -1,5 +1,5 @@
 import { Add, Remove } from "../engine/frame.js";
-import { height, width } from "../renderer/render.js";
+import { height, Shake, width } from "../renderer/render.js";
 import { table } from "./table.js";
 import { BlankBuffer, ColorCopy } from "./texture.js";
 
@@ -17,6 +17,9 @@ export class v2 {
     }
     multiply(n) {
         return new v2(this.x * n, this.y * n);
+    }
+    multiplyv2(v) {
+        return new v2(this.x * v.x, this.y * v.y);
     }
 
     clamp(min, max) {
@@ -51,9 +54,15 @@ export const TurnTowards = (angle,targetAngle,speed) => {
 }
 
 let particlePriority = [];
+let importantParticles = [];
 const remove = async particle => {
     table.remove(particle.emitter.particles,particle);
-    table.remove(particlePriority,particle);
+    if (particle.important) {
+        table.remove(importantParticles,particle);
+    } else {
+        table.remove(particlePriority,particle);
+    }
+    
 }
 
 class ParticleEmitter {
@@ -75,9 +84,15 @@ class ParticleEmitter {
         const p = this.new();
         p.emitter = this;
         if (p.velocity) { p.velocity = p.velocity.add(this.target.velocity); }
-        const e = table.add(particlePriority,p,0);
-        if (e > 200) { table.iterate(particlePriority,remove,200); }
         table.insert(this.particles,p);
+
+        if (p.important) {
+            const e = table.add(importantParticles,p,0);
+            if (e > 300) { table.iterate(importantParticles,remove,300); }
+        } else {
+            const e = table.add(particlePriority,p,0);
+            if (e > 200) { table.iterate(particlePriority,remove,200); }
+        }
     }
 
     frame(dt) {
@@ -200,7 +215,8 @@ export class fireParticleEmitter extends RandomEmit {
             buffer: BlankBuffer(this.size.x,this.size.y),
             animation: 0,
             path: "full",
-            options: 3
+            options: 3,
+            important: true,
         };
 
         changeTexture(obj,obj.options);
@@ -305,14 +321,17 @@ export class entity {
         table.insert(entities,this);
     }
     emitters = [];
+    activecollisions = [];
 
     damage(dmg, damager) {
-        if (this.iframes && !damager.ignoreIframes) { return; }
-        this.health -= dmg;
+        if (this.inactive) { return; }
+        if (this.iframes && !damager.ignoreIframes && (this.idamage && this.idamage >= dmg)) { return; }
+        this.health = Math.max(0,this.health - dmg);
         this.flash = 0.1;
         this.iframes = this.inv;
+        this.idamage = dmg;
 
-        if (this.ondamage) { this.ondamage(this); }
+        if (this.ondamage) { this.ondamage(this,dmg); }
         if (this.health <= 0) { this.died(); }
     }
     
@@ -336,7 +355,7 @@ export class entity {
             if (!emitter) { return; }
             emitter.frame(dt);
         });
-        collide(this);
+        collide(this,dt);
     }
     render() {
         draw(this,this.layer,this.buffer);
@@ -347,15 +366,33 @@ export class entity {
     }
 }
 
-const collision = (entity1, entity2) => {
+export const damagetypes = {
+    explosion: {
+
+    }
+}
+
+const addcollision = (entity, target) => {
+    table.insert(entity.collisions,target);
+}
+const collision = (entity1, entity2, dt) => {
     if ((entity1.nosamegroup || entity2.nosamegroup) && entity1.group == entity2.group) { return; }
+    if (entity1.isProjectile && entity2.isProjectile) { return; }
     let weight1 = entity1.weight || 1, weight2 = entity2.weight || 1;
     let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2)).multiply(1 / (weight1 + weight2));
 
-    entity1.velocity = vel;
-    entity2.velocity = vel;
+    if (!entity1.unmovable) {
+        entity1.velocity = vel.add(entity1.pos.sub(entity2.pos).unit().multiply(dt * 40));
+    }
+    if (!entity2.unmovable) {
+        entity2.velocity = vel.add(entity2.pos.sub(entity1.pos).unit().multiply(dt * 40));
+    }
+
+    if (entity1.hit) { entity1.hit(entity2); }
+    if (entity2.hit) { entity2.hit(entity1); }
 
     if (entity1.group == entity2.group) { return; }
+    if (table.find(entity1.activecollisions,entity2)) { return; }
     
     entity1.damage(entity2.dmg || 1,entity2);
     entity2.damage(entity1.dmg || 1,entity1);
@@ -372,9 +409,10 @@ const intersectCircle = (circle, rect) => {
 
     return d.sub(rect.hitbox.multiply(0.5)).magnitude() <= (circle.hitbox * circle.hitbox);
 }
-const collide = target => {
+const collide = (target,dt) => {
     if (target.inactive) { return; }
-    table.iterate(entities,async entity => {
+    target.collisions = [];
+    table.iterate(entities,entity => {
         if (!entity) { return; }
         if (entity.inactive) { return; }
         if (target == entity) { return; }
@@ -393,9 +431,19 @@ const collide = target => {
                 if (Math.abs(target.pos.y - entity.pos.y) > target.hitbox.y / 2 + entity.hitbox.y / 2) { return; }
             }
         }
+        
+        addcollision(target,entity);
+        collision(target,entity,dt);
+    });
 
-        collision(target,entity);
-    })
+    //table.iterate(target.activecollisions, entity => {
+    //    if (table.find(target.collisions,entity)) { return; }
+    //    table.remove(target.activecollisions, entity);
+    //});
+    table.iterate(target.collisions, entity => {
+        if (table.find(target.activecollisions,entity)) { return; }
+        table.insert(target.activecollisions,entity);
+    });
 }
 
 class projectile {
@@ -420,6 +468,7 @@ class projectile {
         table.insert(entities,this);
     }
     isProjectile = true;
+    activecollisions = [];
     destroy() {
         Remove(this.fr);
         table.remove(entities,this);
@@ -439,7 +488,7 @@ class projectile {
             this.destroy();
         }
 
-        collide(this);
+        collide(this,dt);
     }
     render() {
         draw(this,this.layer,this.buffer);
@@ -450,10 +499,11 @@ export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        //this.pierce = 999;
-        this.dmg = 1;
+        this.pierce = 8;
+        this.dmg = 5;
         this.nosamegroup = true;
-        this.weight = 0.5;
+        this.weight = 0.2;
+        this.unmovable = true;
         this.ignoreIframes = true;
         this.lifetime = 5;
     }
@@ -469,9 +519,13 @@ export class ExplosionProjectile extends projectile {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
         this.lifetime = 0.5;
-        this.pierce = 9999;
+        this.pierce = Infinity;
         this.weight = 9999999;
+        this.dmg = 50;
         this.nosamegroup = true;
+        this.damagetype = damagetypes.explosion;
+
+        Shake(3,1);
     }
 
     hit(target) {

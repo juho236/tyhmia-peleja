@@ -51,5 +51,17 @@ table.iterate = async (array, callback, startIndex) => {
         return;
     };
 }
+table.pairs = (obj, callback) => {
+    table.iterate(Object.entries(obj), i => {
+        callback(i[0],i[1]);
+    });
+}
+table.find = (array, item, startIndex) => {
+    let res = false;
+    table.iterate(array, key => {
+        if (key === item) { res = true; return -1; }
+    },startIndex);
+    return res;
+}
 
 export { table };
