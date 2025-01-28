@@ -45,8 +45,6 @@ export class Color {
     }
     update() {
         this.hex = `#${this.r.toString(16).padEnd(2,"0")}${this.g.toString(16).padEnd(2,"0")}${this.b.toString(16).padEnd(2,"0")}${(255 - this.a).toString(16).padEnd(2,"0")}`;
-
-        console.log(this.hex,this.r,this.g,this.b);
     }
 }
 

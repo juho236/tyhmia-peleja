@@ -43,7 +43,7 @@ let shake = 0;
 
 export const Shake = (strength,fade) => {
     shake += strength;
-    
+
     let s = strength;
     let t = AddTick(dt => {
         let d = dt / fade * s;
@@ -75,5 +75,6 @@ const main = (canvas, d) => {
     if (bufferIndex >= buffers) { bufferIndex = 0; }
     d.clearRect(0,0,width,height);
 
-    d.drawImage(tripleBuffer[bufferIndex].Buffer,(Math.random() * 2 - 1) * shake,(Math.random() * 2 - 1) * shake);
+    let s = Math.sqrt(Math.max(0,shake));
+    d.drawImage(tripleBuffer[bufferIndex].Buffer,(Math.random() * 2 - 1) * s,(Math.random() * 2 - 1) * s);
 }

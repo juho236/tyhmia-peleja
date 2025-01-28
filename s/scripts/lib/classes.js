@@ -64,6 +64,12 @@ const remove = async particle => {
     }
     
 }
+const destroy = obj => {
+    table.pairs(obj,(key, value) => {
+        obj[key] = undefined;
+        //destroy(value);
+    });
+}
 
 class ParticleEmitter {
     constructor(name,rate,entity,offset,textures,size) {
@@ -286,6 +292,7 @@ const transform = (rot,offset) => {
 }
 
 const draw = (entity,layer,buffer) => {
+    if (entity.destroyed) { return; }
     if (entity.invisible) { return; }
     let texture = entity.texture;
     if (entity.flash) { texture = entity.flashtexture; }
@@ -340,10 +347,13 @@ export class entity {
         Remove(this.event);
         table.remove(entities,this);
         this.destroyed = true;
+        destroy(this);
     }
     frame(dt) {
+        if (!this) { return; }
         if (this.flash) { this.flash -= dt; if (this.flash <= 0) { this.flash = null; }}
         if (this.iframes) { this.iframes -= dt; if (this.iframes <= 0) { this.iframes = null; this.buffer.Draw.globalAlpha = 1; }}
+        if (this.destroyed) { return; }
 
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
@@ -382,10 +392,10 @@ const collision = (entity1, entity2, dt) => {
     let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2)).multiply(1 / (weight1 + weight2));
 
     if (!entity1.unmovable) {
-        entity1.velocity = vel.add(entity1.pos.sub(entity2.pos).unit().multiply(dt * 40));
+        entity1.velocity = vel.add(entity1.pos.sub(entity2.pos).unit().multiply(dt * 30));
     }
     if (!entity2.unmovable) {
-        entity2.velocity = vel.add(entity2.pos.sub(entity1.pos).unit().multiply(dt * 40));
+        entity2.velocity = vel.add(entity2.pos.sub(entity1.pos).unit().multiply(dt * 30));
     }
 
     if (entity1.hit) { entity1.hit(entity2); }
@@ -394,8 +404,8 @@ const collision = (entity1, entity2, dt) => {
     if (entity1.group == entity2.group) { return; }
     if (table.find(entity1.activecollisions,entity2)) { return; }
     
-    entity1.damage(entity2.dmg || 1,entity2);
     entity2.damage(entity1.dmg || 1,entity1);
+    return entity1.damage(entity2.dmg || 1,entity2);
 }
 
 const intersectCircle = (circle, rect) => {
@@ -410,11 +420,13 @@ const intersectCircle = (circle, rect) => {
     return d.sub(rect.hitbox.multiply(0.5)).magnitude() <= (circle.hitbox * circle.hitbox);
 }
 const collide = (target,dt) => {
+    if (target.destroyed) { return; }
     if (target.inactive) { return; }
     target.collisions = [];
     table.iterate(entities,entity => {
         if (!entity) { return; }
         if (entity.inactive) { return; }
+        if (entity.destroyed) { return; }
         if (target == entity) { return; }
         
         if (typeof entity.hitbox == "number") {
@@ -433,13 +445,14 @@ const collide = (target,dt) => {
         }
         
         addcollision(target,entity);
-        collision(target,entity,dt);
+        return collision(target,entity,dt);
     });
 
     //table.iterate(target.activecollisions, entity => {
     //    if (table.find(target.collisions,entity)) { return; }
     //    table.remove(target.activecollisions, entity);
     //});
+    if (!target.collisions) { return; }
     table.iterate(target.collisions, entity => {
         if (table.find(target.activecollisions,entity)) { return; }
         table.insert(target.activecollisions,entity);
@@ -472,6 +485,8 @@ class projectile {
     destroy() {
         Remove(this.fr);
         table.remove(entities,this);
+        this.destroyed = true;
+        destroy(this);
     }
     
     damage(dmg,target) {
@@ -479,6 +494,7 @@ class projectile {
         this.pierce -= 1;
         if (this.pierce >= 0) { return; }
         this.destroy();
+        return -1;
     }
     frame(dt) {
         this.lifetime -= dt;
@@ -486,6 +502,7 @@ class projectile {
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if ((this.pos.x < -this.size.x || this.pos.x > width + this.size.x) || (this.pos.y < -this.size.y || this.pos.y > height + this.size.y)) {
             this.destroy();
+            return;
         }
 
         collide(this,dt);
@@ -499,7 +516,7 @@ export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        this.pierce = 8;
+        this.pierce = 2;
         this.dmg = 5;
         this.nosamegroup = true;
         this.weight = 0.2;
@@ -520,7 +537,7 @@ export class ExplosionProjectile extends projectile {
 
         this.lifetime = 0.5;
         this.pierce = Infinity;
-        this.weight = 9999999;
+        this.weight = 5;
         this.dmg = 50;
         this.nosamegroup = true;
         this.damagetype = damagetypes.explosion;

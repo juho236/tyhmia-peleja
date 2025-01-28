@@ -39,10 +39,10 @@ let waves = [
         {id: "enemy",enemy: "smallmeteor",count: 100,time: 0.25, parallel: true},
         {id: "enemy",enemy: "missile",count: 9,time: 5}
     ]},
-    {checkpoint: true, pattern: [
+    {pattern: [
         {id: "enemy",enemy: "mine",count: 5,time: 3,parallel: true},
         {id: "enemy",enemy: "missile",count: 5,time: 3},
-    ]}
+    ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -162,6 +162,10 @@ let enemies = {
         },
         load: e => {
             e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+            e.hit = e1 => {
+                if (e1.isProjectile) { return; }
+                e.damage(999,e1);
+            }
         },
         died: e => {
             e.inactive = true;

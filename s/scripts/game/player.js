@@ -188,6 +188,7 @@ const shoot = (playerEntity,dir) => {
     playerEntity.leftLaser.emit();
     playerEntity.rightlaser.emit();
     
+    dir += (Math.random() - 0.5) * 0.3;
     const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(350),new v2(16,16),new v2(14,14),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;
