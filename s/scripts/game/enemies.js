@@ -3,6 +3,7 @@ import { ClampAngle, ExplosionProjectile, dustParticleEmitter, entity, fireParti
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
+import { SaveScore } from "./score.js";
 
 let waveIndex = 4;
 
@@ -94,6 +95,7 @@ let enemies = {
         height: 8,
         size: new v2(8,8),
         hitbox: 2,
+        score: 100,
         health: 75,
         load: e => {
             e.lock = 5;
@@ -145,6 +147,7 @@ let enemies = {
         height: 8,
         size: new v2(8,8),
         hitbox: 6,
+        score: 50,
         health: 25,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -185,6 +188,7 @@ let enemies = {
         hitbox: new v2(5,5),
         health: 5,
         dmg: 2,
+        score: 5,
         oob: true,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -225,6 +229,7 @@ let enemies = {
         hitbox: new v2(11,11),
         health: 40,
         dmg: 8,
+        score: 10,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -282,6 +287,7 @@ const spawnEnemy = id => {
     e.health = enemy.health;
     e.texture = enemy.textures.default;
     e.dmg = enemy.dmg;
+    e.score = enemy.score;
     e.oob = enemy.oob;
     e.pos = new v2(Math.random() * width, -20);
 
@@ -316,7 +322,7 @@ const wavePart = async (pattern,index) => {
 const spawnWave = async index => {
     const wave = waves[index];
 
-    if (wave.checkpoint) { waveIndex = index; }
+    if (wave.checkpoint) { waveIndex = index; SaveScore(); }
     try {
         await wavePart(wave.pattern,0);
         spawnWave(index + 1);

@@ -55,6 +55,14 @@ export const setRenderer = r => {
     renderer = r;
 }
 
+let fspeed = 1;
+export const Pause = () => {
+    fspeed = 0;
+}
+export const Resume = () => {
+    fspeed = 1;
+}
+
 const frame = () => {
     if (!run) { return; }
 
@@ -74,12 +82,16 @@ const frame = () => {
         ClearLayer(Layers.Enemies);
         ClearLayer(Layers.Player);
 
+        let passed = false;
         try {
-            table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate); });
+            table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); });
+            passed = true;
         } catch (err) {
+            passed = false;
             console.error(err);
             return;
         }
+        if (!passed) { return; }
         try {
             renderer();
         } catch (err) {

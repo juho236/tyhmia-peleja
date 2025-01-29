@@ -1,4 +1,5 @@
 import { Add, Remove } from "../engine/frame.js";
+import { AddScore } from "../game/score.js";
 import { height, Shake, width } from "../renderer/render.js";
 import { table } from "./table.js";
 import { BlankBuffer, ColorCopy } from "./texture.js";
@@ -64,7 +65,7 @@ const remove = async particle => {
     }
     
 }
-const destroy = obj => {
+const Destroy = obj => {
     table.pairs(obj,(key, value) => {
         obj[key] = undefined;
         //destroy(value);
@@ -339,22 +340,22 @@ export class entity {
         this.idamage = dmg;
 
         if (this.ondamage) { this.ondamage(this,dmg); }
-        if (this.health <= 0) { this.died(); }
+        if (this.health <= 0) { if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); } this.died(); }
     }
     
     destroy() {
         if (this.removing) {this.removing(); }
         Remove(this.event);
         table.remove(entities,this);
+        Destroy(this);
         this.destroyed = true;
-        destroy(this);
     }
     frame(dt) {
         if (!this) { return; }
         if (this.flash) { this.flash -= dt; if (this.flash <= 0) { this.flash = null; }}
         if (this.iframes) { this.iframes -= dt; if (this.iframes <= 0) { this.iframes = null; this.buffer.Draw.globalAlpha = 1; }}
         if (this.destroyed) { return; }
-
+        
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
         this.outside = this.pos.x < -this.size.x - 64 || this.pos.x > width + this.size.x + 64 || this.pos.y < -this.size.y - 64 || this.pos.y > height + this.size.y + 64;
@@ -368,6 +369,7 @@ export class entity {
         collide(this,dt);
     }
     render() {
+        if (this.destroyed) { return; }
         draw(this,this.layer,this.buffer);
         this.emitters.map(emitter => {
             if (!emitter) { return; }
@@ -486,7 +488,7 @@ class projectile {
         Remove(this.fr);
         table.remove(entities,this);
         this.destroyed = true;
-        destroy(this);
+        Destroy(this);
     }
     
     damage(dmg,target) {
@@ -516,10 +518,10 @@ export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        this.pierce = 2;
+        this.pierce = 7;
         this.dmg = 5;
         this.nosamegroup = true;
-        this.weight = 0.2;
+        this.weight = 0.05;
         this.unmovable = true;
         this.ignoreIframes = true;
         this.lifetime = 5;

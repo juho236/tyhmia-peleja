@@ -24,6 +24,7 @@ export const Layers = {
     Projectiles: BlankBuffer(width,height),
     Enemies: BlankBuffer(width,height),
     Player: BlankBuffer(width,height),
+    scores: BlankBuffer(width,height),
     hud: BlankBuffer(width,height),
 }
 
@@ -69,6 +70,7 @@ const main = (canvas, d) => {
     draw.drawImage(Layers.Enemies.Buffer,0,0);
     draw.drawImage(Layers.Projectiles.Buffer,0,0);
     draw.drawImage(Layers.Player.Buffer,0,0);
+    draw.drawImage(Layers.scores.Buffer,0,0);
     draw.drawImage(Layers.hud.Buffer,0,0);
 
     bufferIndex ++;

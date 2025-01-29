@@ -13,6 +13,10 @@ export class Scale2 {
         this.x = new Scale(xscale, xoffset);
         this.y = new Scale(yscale, yoffset);
     }
+
+    add(s2) {
+        return new Scale2(this.x.scale + s2.x.scale,this.x.offset + s2.x.offset,this.y.scale + s2.y.scale,this.y.offset + s2.y.offset);
+    }
 }
 export class Anchor {
     constructor(x, y) {
@@ -69,8 +73,11 @@ export class UILayer {
     }
     px = 0;
     py = 0;
-    
+    children = {};
 
+    addChild(c) {
+        table.insert(this.children,c);
+    }
     redraw() {
         this.layer.Draw.clearRect(0,0,this.width,this.height);
 
@@ -84,10 +91,13 @@ class UIObject {
         this.pos = pos;
         this.size = size;
         this.anchor = anchor;
-        this.children = children;
+        this.children = children || {};
     }
     children = {};
 
+    destroy() {
+        table.remove(this.parent.children,this);
+    }
     redraw() {
         if (!this.parent) { return; }
         this.parent.redraw();
@@ -122,5 +132,24 @@ export class Frame extends UIObject {
 
         ctx.fillStyle = this.color.hex;
         ctx.fillRect(x,y,width,height);
+    }
+}
+export class Text extends UIObject {
+    constructor(obj) {
+        super(obj.pos, obj.size, obj.anchor);
+        this.color = obj.color;
+        this.text = obj.text;
+        this.font = `${obj.textsize}px sans-serif`;
+    }
+
+    render(x,y,width,height) {
+        let ctx = this.buffer.Draw;
+
+        ctx.fillStyle = this.color.hex;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = this.font;
+        
+        ctx.fillText(this.text,x + width / 2,y + height / 2);
     }
 }

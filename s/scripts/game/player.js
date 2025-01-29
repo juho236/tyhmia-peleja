@@ -7,11 +7,13 @@ import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 import { LoadWave, SetPlayer } from "./enemies.js";
 import { UILayer, Frame, Scale2, Anchor, Color } from "../engine/ui.js";
+import { LoadScore } from "./score.js";
 
 
 let lasertextures;
 let lasertextures2;
 export const Load = async () => {
+    LoadScore();
     SetSpeed(0);
     const playerEntity = new entity("Player",new v2(16,16),new v2(4,4),Layers.Player,await TextureBuffers(await LoadTextures(
         {
@@ -188,7 +190,7 @@ const shoot = (playerEntity,dir) => {
     playerEntity.leftLaser.emit();
     playerEntity.rightlaser.emit();
     
-    dir += (Math.random() - 0.5) * 0.3;
+    dir += (Math.random() - 0.5) * 0.05;
     const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(350),new v2(16,16),new v2(14,14),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;
