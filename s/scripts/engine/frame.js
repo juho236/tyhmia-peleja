@@ -81,6 +81,7 @@ const frame = () => {
         ClearLayer(Layers.Projectiles);
         ClearLayer(Layers.Enemies);
         ClearLayer(Layers.Player);
+        ClearLayer(Layers.XP);
 
         let passed = false;
         try {

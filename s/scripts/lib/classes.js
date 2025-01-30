@@ -10,6 +10,9 @@ export class v2 {
         this.y = y;
     }
 
+    lerp(v,dt) {
+        return new v2(this.x + (v.x - this.x) * dt,this.y + (v.y - this.y) * dt);
+    } 
     add(v) {
         return new v2(this.x + v.x,this.y + v.y);
     }
@@ -377,7 +380,12 @@ export class entity {
         })
     }
 }
-
+export class AmbientEntity extends entity {
+    constructor(name,size,hitbox,layer,textures) {
+        super(name, size, hitbox, layer, textures);
+        this.nocollision = true;
+    }
+}
 export const damagetypes = {
     explosion: {
 
@@ -391,7 +399,7 @@ const collision = (entity1, entity2, dt) => {
     if ((entity1.nosamegroup || entity2.nosamegroup) && entity1.group == entity2.group) { return; }
     if (entity1.isProjectile && entity2.isProjectile) { return; }
     let weight1 = entity1.weight || 1, weight2 = entity2.weight || 1;
-    let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2)).multiply(1 / (weight1 + weight2));
+    let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2));
 
     if (!entity1.unmovable) {
         entity1.velocity = vel.add(entity1.pos.sub(entity2.pos).unit().multiply(dt * 30));
@@ -422,11 +430,13 @@ const intersectCircle = (circle, rect) => {
     return d.sub(rect.hitbox.multiply(0.5)).magnitude() <= (circle.hitbox * circle.hitbox);
 }
 const collide = (target,dt) => {
+    if (target.nocollision) { return; }
     if (target.destroyed) { return; }
     if (target.inactive) { return; }
     target.collisions = [];
     table.iterate(entities,entity => {
         if (!entity) { return; }
+        if (entity.nocollision) { return; }
         if (entity.inactive) { return; }
         if (entity.destroyed) { return; }
         if (target == entity) { return; }
@@ -518,10 +528,7 @@ export class LaserProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        this.pierce = 7;
-        this.dmg = 5;
         this.nosamegroup = true;
-        this.weight = 0.05;
         this.unmovable = true;
         this.ignoreIframes = true;
         this.lifetime = 5;

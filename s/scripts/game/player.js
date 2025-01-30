@@ -6,14 +6,24 @@ import { table } from "../lib/table.js";
 import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 import { LoadWave, SetPlayer } from "./enemies.js";
+import { SetPlayer as SetPlayer2 } from "./score.js";
 import { UILayer, Frame, Scale2, Anchor, Color } from "../engine/ui.js";
 import { LoadScore } from "./score.js";
 
+let power = {
+    maxhealth: 100,
+    pierce: 7,
+    dmg: 5,
+    shootspeed: 8,
+    weight: 0.05
+}
+export const AddPower = (key, value) => {
+    power[key] += value;
+}
 
 let lasertextures;
 let lasertextures2;
 export const Load = async () => {
-    LoadScore();
     SetSpeed(0);
     const playerEntity = new entity("Player",new v2(16,16),new v2(4,4),Layers.Player,await TextureBuffers(await LoadTextures(
         {
@@ -66,7 +76,7 @@ export const Load = async () => {
     playerEntity.deceleration = 3;
     playerEntity.turnspeed = 7;
 
-    playerEntity.shootspeed = 5;
+    playerEntity.shootspeed = power.shootspeed;
     playerEntity.shootTimer = 0;
 
     BindToKeyDown("a",() => { playerEntity.left = true; });
@@ -85,7 +95,7 @@ export const Load = async () => {
 
 
     playerEntity.event = AddTick(dt => {
-        if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; }
+        if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; if (playerEntity.deathtimer <= -2) { playerEntity.destroy(); return -1; }}
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
 
@@ -110,7 +120,7 @@ export const Load = async () => {
         playerEntity.render();
     });
 
-    playerEntity.maxhealth = 100;
+    playerEntity.maxhealth = power.maxhealth;
     playerEntity.health = playerEntity.maxhealth;
 
     let hud = new UILayer(Layers.hud);
@@ -155,6 +165,8 @@ export const Load = async () => {
     }
 
     SetPlayer(playerEntity);
+    SetPlayer2(playerEntity);
+    LoadScore();
     LoadWave();
 }
 
@@ -194,4 +206,9 @@ const shoot = (playerEntity,dir) => {
     const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(350),new v2(16,16),new v2(14,14),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;
+
+    
+    t.pierce = power.pierce;
+    t.dmg = power.dmg;
+    t.weight = power.weight;
 }

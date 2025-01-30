@@ -103,6 +103,7 @@ class UIObject {
         this.parent.redraw();
     }
     draw() {
+        if (this.invisible) { return; }
         let px = this.pos.x.scale * this.parent.width + this.pos.x.offset;
         let py = this.pos.y.scale * this.parent.height + this.pos.y.offset;
 

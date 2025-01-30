@@ -1,11 +1,11 @@
 import { Add, Remove } from "../engine/frame.js";
-import { ClampAngle, ExplosionProjectile, dustParticleEmitter, entity, fireParticleEmitter, v2 } from "../lib/classes.js";
+import { ClampAngle, v2, ExplosionProjectile, dustParticleEmitter, entity, fireParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
 import { SaveScore } from "./score.js";
 
-let waveIndex = 4;
+let waveIndex = 0;
 
 let waves = [
     {pattern: [
@@ -15,8 +15,8 @@ let waves = [
     {pattern: [
         {id: "enemy",enemy: "smallmeteor",count: 15,time: 3}
     ]},
-    {checkpoint: true, pattern: [
-        {id: "enemy",enemy: "tinymeteor",count: 10,time: 1},
+    {pattern: [
+        {id: "enemy",enemy: "tinymeteor",count: 10,time: 1, parallel: true},
         {id: "enemy",enemy: "smallmeteor",count: 20,time: 1},
     ]},
     {pattern: [
@@ -27,7 +27,7 @@ let waves = [
     {pattern: [
         {id: "enemy",enemy: "smallmeteor",count: 100,time: 0}
     ]},
-    {checkpoint: true, pattern: [
+    {pattern: [
         {id: "enemy",enemy: "mine",count: 5,time: 3},
         {id: "waitAll"},
         {id: "enemy",enemy: "smallmeteor",count: 25,time: 0.5, parallel: true},
@@ -36,7 +36,7 @@ let waves = [
     {pattern: [
         {id: "enemy",enemy: "missile",count: 5,time: 3},
     ]},
-    {checkpoint: true, pattern: [
+    {pattern: [
         {id: "enemy",enemy: "smallmeteor",count: 100,time: 0.25, parallel: true},
         {id: "enemy",enemy: "missile",count: 9,time: 5}
     ]},
@@ -95,7 +95,7 @@ let enemies = {
         height: 8,
         size: new v2(8,8),
         hitbox: 2,
-        score: 100,
+        score: 12,
         health: 75,
         load: e => {
             e.lock = 5;
@@ -147,7 +147,7 @@ let enemies = {
         height: 8,
         size: new v2(8,8),
         hitbox: 6,
-        score: 50,
+        score: 8,
         health: 25,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -188,7 +188,7 @@ let enemies = {
         hitbox: new v2(5,5),
         health: 5,
         dmg: 2,
-        score: 5,
+        score: 1,
         oob: true,
         ai: (e, dt) => {
             if (e.removetimer) {
@@ -229,7 +229,7 @@ let enemies = {
         hitbox: new v2(11,11),
         health: 40,
         dmg: 8,
-        score: 10,
+        score: 3,
         oob: true,
         ai: (e,dt) => {
             if (e.removetimer) {
@@ -322,7 +322,9 @@ const wavePart = async (pattern,index) => {
 const spawnWave = async index => {
     const wave = waves[index];
 
-    if (wave.checkpoint) { waveIndex = index; SaveScore(); }
+    waveIndex = index;
+    await SaveScore();
+
     try {
         await wavePart(wave.pattern,0);
         spawnWave(index + 1);
