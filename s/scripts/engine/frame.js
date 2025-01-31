@@ -2,6 +2,16 @@ import { table } from "../lib/table.js";
 import { ClearLayer, Layers } from "../renderer/render.js";
 
 const callbacks = [];
+const independent = [];
+
+export const AddIndependent = callback => {
+    table.insert(independent,callback);
+
+    return callback;
+}
+export const RemoveIndependent = callback => {
+    table.remove(independent,callback);
+}
 
 export const Add = (callback) => {
     table.insert(callbacks,callback);
@@ -83,16 +93,9 @@ const frame = () => {
         ClearLayer(Layers.Player);
         ClearLayer(Layers.XP);
 
-        let passed = false;
-        try {
-            table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); });
-            passed = true;
-        } catch (err) {
-            passed = false;
-            console.error(err);
-            return;
-        }
-        if (!passed) { return; }
+        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); });
+        table.iterate(independent,callback => { if (!callback) { return; } callback(1 / frameRate); });
+
         try {
             renderer();
         } catch (err) {

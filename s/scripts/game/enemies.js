@@ -71,206 +71,210 @@ const parts = {
 };
 
 let enemyCount = 0;
-let enemies = {
-    fire: {
-        textures: {
-            full0: "assets/trail-full0.png",
-            full1: "assets/trail-full1.png",
-            full2: "assets/trail-full2.png",
-            full3: "assets/trail-full3.png",
-            smoke0: "assets/trail-smoke0.png",
-            smoke1: "assets/trail-smoke1.png",
+let enemies;
+
+const LoadEnemies = () => {
+    enemies = {
+        fire: {
+            textures: {
+                full0: "assets/trail-full0.png",
+                full1: "assets/trail-full1.png",
+                full2: "assets/trail-full2.png",
+                full3: "assets/trail-full3.png",
+                smoke0: "assets/trail-smoke0.png",
+                smoke1: "assets/trail-smoke1.png",
+            },
+            width: 5,
+            height: 5
         },
-        width: 5,
-        height: 5
-    },
-    dust: {
-        textures: {dust0: "assets/trail-smoke0.png", dust1: "assets/trail-smoke1.png"},
-        width: 5,
-        height: 5,
-    },
-    missile: {
-        textures: {default: "assets/mine-small1.png"},
-        width: 8,
-        height: 8,
-        size: new v2(8,8),
-        hitbox: 2,
-        score: 12,
-        health: 75,
-        load: e => {
-            e.lock = 5;
-            e.weight = 50;
-            e.velocity = player.pos.sub(e.pos).unit().multiply(40);
-            e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
-            e.hit = e1 => {
-                if (e1.isProjectile) { return; }
-                e.damage(999,e1);
-            }
+        dust: {
+            textures: {dust0: "assets/trail-smoke0.png", dust1: "assets/trail-smoke1.png"},
+            width: 5,
+            height: 5,
         },
-        ai: (e, dt) => {
-            if (e.removetimer) {
-                e.removetimer -= dt;
-                if (e.removetimer > 0) { return; }
-
-                e.destroy();
-                return;
-            }
-            e.lock -= dt;
-            if (e.lock > 0) { return; }
-            
-            e.hitbox = 24;
-
-            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
-
-            //let d = player.pos.sub(e.pos).abs();
-            //d = player.pos.add(player.velocity.multiplyv2(t)).sub(e.pos);
-            //if (t.x == 0 || t.y == 0) { return; }
-
-
-            //e.velocity = e.velocity.add(new v2((d.x * 2) / (t.x * t.x),(d.y * 2) / (t.y * t.y)).multiply(dt));
-            //e.velocity = e.velocity.add(new v2((d.x - e.velocity.x * t.x * 2) / (t.x * t.x),(d.y - e.velocity.y * t.y * 2) / (t.y * t.y)).multiply(dt));
-            //e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * a));
-        },
-        died: e => {
-            e.inactive = true;
-            e.invisible = true;
-            e.removetimer = 5;
-            
-            for (let i=0;i < 128; i ++) { e.explosion.emit(); }
-            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),64,e.layer);
-            e.velocity = new v2(0,0);
-        }
-    },
-    mine: {
-        textures: {default: "assets/mine-small1.png"},
-        width: 8,
-        height: 8,
-        size: new v2(8,8),
-        hitbox: 6,
-        score: 8,
-        health: 25,
-        ai: (e, dt) => {
-            if (e.removetimer) {
-                e.removetimer -= dt;
-                if (e.removetimer > 0) { return; }
-
-                e.destroy();
-                return;
-            }
-
-            e.trot = ClampAngle(e.trot + dt * 1);
-
-            e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 300));
-            e.velocity = e.velocity.sub(e.velocity.multiply(dt * 1));
-        },
-        load: e => {
-            e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
-            e.hit = e1 => {
-                if (e1.isProjectile) { return; }
-                e.damage(999,e1);
-            }
-        },
-        died: e => {
-            e.inactive = true;
-            e.invisible = true;
-            e.removetimer = 5;
-            
-            for (let i=0;i < 128; i ++) { e.explosion.emit(); }
-            e.velocity = new v2(0,0);
-            new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),48,e.layer);
-        }
-    },
-    tinymeteor: {
-        textures: {default: "assets/meteor-tiny1.png"},
-        width: 6,
-        height: 6,
-        size: new v2(6,6),
-        hitbox: new v2(5,5),
-        health: 5,
-        dmg: 2,
-        score: 1,
-        oob: true,
-        ai: (e, dt) => {
-            if (e.removetimer) {
-                e.removetimer -= dt;
-                if (e.removetimer > 0) { return; }
-
-                e.destroy();
-                return;
-            }
-            e.trot = ClampAngle(e.trot + dt * 3);
-            
-            if (e.outside) { e.destroy(); }
-        },
-        load: e => {
-            e.velocity = player.pos.sub(e.pos).unit().multiply(120);
-            e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-        },
-        ondamage: e => {
-            e.dust.emit();
-            Shake(0.1,0.5);
-        },
-        died: e => {
-            e.inactive = true;
-            e.invisible = true;
-            e.removetimer = 4;
-            Shake(0.5,0.5);
-            
-            
-            for (let i=0;i < 4; i ++) { e.dust.emit(); }
-            e.velocity = new v2(0,0);
-        }
-    },
-    smallmeteor: {
-        textures: {default: "assets/meteor-small1.png"},
-        width: 16,
-        height: 16,
-        size: new v2(16,16),
-        hitbox: new v2(11,11),
-        health: 40,
-        dmg: 8,
-        score: 3,
-        oob: true,
-        ai: (e,dt) => {
-            if (e.removetimer) {
-                e.removetimer -= dt;
-                if (e.removetimer > 0) { return; }
-
-                e.destroy();
-                return;
-            }
-            e.trot = ClampAngle(e.trot + dt);
-            const u = player.pos.sub(e.pos).unit();
-            e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 50));
-            e.velocity = e.velocity.sub(e.velocity.multiply(dt));
-
-        },
-        load: e => {
-            e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-        },
-        ondamage: e => {
-            e.dust.emit();
-            Shake(0.4,0.5);
-        },
-        died: e => {
-            e.inactive = true;
-            Shake(1,0.5);
-
-            const s = 3;
-            const b = Math.random();
-            for (let i=0; i < s; i ++) {
-                const a = i / s + b;
-                const spawn = spawnEnemy("tinymeteor");
+        missile: {
+            textures: {default: "assets/mine-small1.png"},
+            width: 8,
+            height: 8,
+            size: new v2(8,8),
+            hitbox: 2,
+            score: 12,
+            health: 75,
+            load: e => {
+                e.lock = 5;
+                e.weight = 50;
+                e.velocity = player.pos.sub(e.pos).unit().multiply(40);
+                e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+                e.hit = e1 => {
+                    if (e1.isProjectile) { return; }
+                    e.damage(999,e1);
+                }
+            },
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                e.lock -= dt;
+                if (e.lock > 0) { return; }
                 
-                const rot = a * Math.PI * 2;
-                spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
-                spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
+                e.hitbox = 24;
+    
+                e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
+    
+                //let d = player.pos.sub(e.pos).abs();
+                //d = player.pos.add(player.velocity.multiplyv2(t)).sub(e.pos);
+                //if (t.x == 0 || t.y == 0) { return; }
+    
+    
+                //e.velocity = e.velocity.add(new v2((d.x * 2) / (t.x * t.x),(d.y * 2) / (t.y * t.y)).multiply(dt));
+                //e.velocity = e.velocity.add(new v2((d.x - e.velocity.x * t.x * 2) / (t.x * t.x),(d.y - e.velocity.y * t.y * 2) / (t.y * t.y)).multiply(dt));
+                //e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * a));
+            },
+            died: e => {
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 5;
+                
+                for (let i=0;i < 128; i ++) { e.explosion.emit(); }
+                new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),64,e.layer);
+                e.velocity = new v2(0,0);
             }
-            e.invisible = true;
-            e.removetimer = 4;
-            
-            for (let i=0;i < 15; i ++) { e.dust.emit(); }
-            e.velocity = new v2(0,0);
+        },
+        mine: {
+            textures: {default: "assets/mine-small1.png"},
+            width: 8,
+            height: 8,
+            size: new v2(8,8),
+            hitbox: 6,
+            score: 8,
+            health: 25,
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+    
+                e.trot = ClampAngle(e.trot + dt * 1);
+    
+                e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 300));
+                e.velocity = e.velocity.sub(e.velocity.multiply(dt * 1));
+            },
+            load: e => {
+                e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+                e.hit = e1 => {
+                    if (e1.isProjectile) { return; }
+                    e.damage(999,e1);
+                }
+            },
+            died: e => {
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 5;
+                
+                for (let i=0;i < 128; i ++) { e.explosion.emit(); }
+                e.velocity = new v2(0,0);
+                new ExplosionProjectile("Explosion","Explosion",e.pos,new v2(0,0),new v2(64,64),48,e.layer);
+            }
+        },
+        tinymeteor: {
+            textures: {default: "assets/meteor-tiny1.png"},
+            width: 6,
+            height: 6,
+            size: new v2(6,6),
+            hitbox: new v2(5,5),
+            health: 5,
+            dmg: 2,
+            score: 1,
+            oob: true,
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                e.trot = ClampAngle(e.trot + dt * 3);
+                
+                if (e.outside) { e.destroy(); }
+            },
+            load: e => {
+                e.velocity = player.pos.sub(e.pos).unit().multiply(120);
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+            },
+            ondamage: e => {
+                e.dust.emit();
+                Shake(0.1,0.5);
+            },
+            died: e => {
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 4;
+                Shake(0.5,0.5);
+                
+                
+                for (let i=0;i < 4; i ++) { e.dust.emit(); }
+                e.velocity = new v2(0,0);
+            }
+        },
+        smallmeteor: {
+            textures: {default: "assets/meteor-small1.png"},
+            width: 16,
+            height: 16,
+            size: new v2(16,16),
+            hitbox: new v2(11,11),
+            health: 40,
+            dmg: 8,
+            score: 3,
+            oob: true,
+            ai: (e,dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                e.trot = ClampAngle(e.trot + dt);
+                const u = player.pos.sub(e.pos).unit();
+                e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 50));
+                e.velocity = e.velocity.sub(e.velocity.multiply(dt));
+    
+            },
+            load: e => {
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+            },
+            ondamage: e => {
+                e.dust.emit();
+                Shake(0.4,0.5);
+            },
+            died: e => {
+                e.inactive = true;
+                Shake(1,0.5);
+    
+                const s = 3;
+                const b = Math.random();
+                for (let i=0; i < s; i ++) {
+                    const a = i / s + b;
+                    const spawn = spawnEnemy("tinymeteor");
+                    
+                    const rot = a * Math.PI * 2;
+                    spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
+                    spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
+                }
+                e.invisible = true;
+                e.removetimer = 4;
+                
+                for (let i=0;i < 15; i ++) { e.dust.emit(); }
+                e.velocity = new v2(0,0);
+            }
         }
     }
 }
@@ -349,6 +353,7 @@ export const LoadWave = () => {
 }
 
 export const Load = async () => {
+    LoadEnemies();
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

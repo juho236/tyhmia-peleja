@@ -75,6 +75,8 @@ export const Load = async () => {
     playerEntity.acceleration = 5;
     playerEntity.deceleration = 3;
     playerEntity.turnspeed = 7;
+    playerEntity.weight = 3;
+    playerEntity.nocollisioncheck = true;
 
     playerEntity.shootspeed = power.shootspeed;
     playerEntity.shootTimer = 0;

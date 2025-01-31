@@ -1,6 +1,6 @@
 import { table } from "../lib/table.js";
 import { BlankBuffer } from "../lib/texture.js";
-import { height, width } from "../renderer/render.js";
+import { AddMouseEvent, height, width } from "../renderer/render.js";
 
 class Scale {
     constructor(scale, offset) {
@@ -16,6 +16,9 @@ export class Scale2 {
 
     add(s2) {
         return new Scale2(this.x.scale + s2.x.scale,this.x.offset + s2.x.offset,this.y.scale + s2.y.scale,this.y.offset + s2.y.offset);
+    }
+    lerp(s2,t) {
+        return new Scale2(this.x.scale + (s2.x.scale - this.x.scale) * t,this.x.offset + (s2.x.offset - this.x.offset) * t,this.y.scale + (s2.y.scale - this.y.scale) * t,this.y.offset + (s2.y.offset - this.y.offset) * t)
     }
 }
 export class Anchor {
@@ -64,12 +67,15 @@ const redraw = (c,p,l) => {
     });
 }
 
+let uilayers = [];
 
 export class UILayer {
     constructor(layer) {
         this.layer = layer;
         this.width = width;
         this.height = height;
+
+        table.insert(uilayers,this);
     }
     px = 0;
     py = 0;
@@ -88,9 +94,9 @@ export class UILayer {
 
 class UIObject {
     constructor(pos, size, anchor, children) {
-        this.pos = pos;
-        this.size = size;
-        this.anchor = anchor;
+        this.pos = pos || new Scale2(0,0,0,0);
+        this.size = size || new Scale2(0,0,0,0);
+        this.anchor = anchor || new Anchor(0,0);
         this.children = children || {};
     }
     children = {};
@@ -125,7 +131,12 @@ class UIObject {
 export class Frame extends UIObject {
     constructor(obj,children) {
         super(obj.pos, obj.size, obj.anchor, children);
-        this.color = obj.color;
+        this.color = obj.color || new Color(255,255,255,0);
+
+        if (obj.onclick || obj.onhover || obj.onleave) { this.canclick = true; }
+        this.onclick = obj.onclick;
+        this.onhover = obj.onhover;
+        this.onleave = obj.onleave;
     }
 
     render(x,y,width,height) {
@@ -138,9 +149,10 @@ export class Frame extends UIObject {
 export class Text extends UIObject {
     constructor(obj) {
         super(obj.pos, obj.size, obj.anchor);
-        this.color = obj.color;
+        this.color = obj.color || new Color(255,255,255,0);
         this.text = obj.text;
-        this.font = `${obj.textsize}px sans-serif`;
+        this.font = `${obj.textsize}px system-ui`;
+        this.textsize = obj.textsize;
     }
 
     render(x,y,width,height) {
@@ -150,7 +162,46 @@ export class Text extends UIObject {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = this.font;
+        let lines = this.text.split("\n");
+        let lineheight = this.textsize;
+
+        table.iterate(lines,(line, index) => {
+            ctx.fillText(line,x + width / 2,y+ lineheight / 2 + index * lineheight);
+        });
+    }
+}
+
+let obj;
+const recurse = (c,x,y) => {
+    if (!c) { return; }
+    table.pairs(c,(index, item) => {
+        recurse(item.children,x,y);
+
+        if (!item.canclick) { return; }
+        if (obj) { return; }
+
+        if (x < item.px || x > item.px + item.width) { return; }
+        if (y < item.py || y > item.py + item.height) { return; }
+
+        obj = item;
+    });
+}
+
+export const Load = canvas => {
+    AddMouseEvent((x,y) => {
+        if (obj && obj.onleave) { obj.onleave(); } 
+        obj = undefined;
+        recurse(uilayers,x,y);
         
-        ctx.fillText(this.text,x + width / 2,y + height / 2);
+        if (!obj) {
+            canvas.style.cursor = "initial";
+            return;
+        }
+        canvas.style.cursor = "pointer";
+        if (obj.onhover) { obj.onhover(); }
+    });
+    canvas.onclick = () => {
+        if (!obj) { return; }
+        if (obj.onclick) { obj.onclick(); }
     }
 }

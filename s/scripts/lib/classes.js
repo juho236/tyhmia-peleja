@@ -22,6 +22,9 @@ export class v2 {
     multiply(n) {
         return new v2(this.x * n, this.y * n);
     }
+    divide(n) {
+        return new v2(this.x / n, this.y / n);
+    }
     multiplyv2(v) {
         return new v2(this.x * v.x, this.y * v.y);
     }
@@ -48,13 +51,21 @@ export const ClampAngle = angle => {
     return (angle + u * Math.PI) % (Math.PI * 2) - u * Math.PI;
 }
 
+export const AngleDir = (angle,targetAngle) => {
+    const d = targetAngle - angle;
+    let u = Math.sign(d);
+    if (Math.abs(d) > Math.PI) { u = -u; }
+    return u;
+}
+export const AngleDiff = (angle,targetAngle) => {
+    let d = Math.abs(targetAngle - angle);
+    if (d > Math.PI) { d -= Math.PI; }
+    return d * AngleDir(angle,targetAngle);
+}
 export const TurnTowards = (angle,targetAngle,speed) => {
     const d = targetAngle - angle;
     if (Math.abs(d) <= speed) { return ClampAngle(targetAngle); }
-
-    let u = Math.sign(d);
-    if (Math.abs(d) > Math.PI) { u = -u; }
-    return ClampAngle(angle + u * speed);
+    return ClampAngle(angle + AngleDir(angle,targetAngle) * speed);
 }
 
 let particlePriority = [];
@@ -369,6 +380,7 @@ export class entity {
             if (!emitter) { return; }
             emitter.frame(dt);
         });
+        if (this.nocollisioncheck) { return; }
         collide(this,dt);
     }
     render() {
@@ -399,19 +411,21 @@ const collision = (entity1, entity2, dt) => {
     if ((entity1.nosamegroup || entity2.nosamegroup) && entity1.group == entity2.group) { return; }
     if (entity1.isProjectile && entity2.isProjectile) { return; }
     let weight1 = entity1.weight || 1, weight2 = entity2.weight || 1;
-    let vel = entity1.velocity.multiply(weight1).add(entity2.velocity.multiply(weight2));
+    let vel1 = entity1.velocity;
+    let vel2 = entity2.velocity;
 
-    if (!entity1.unmovable) {
-        entity1.velocity = vel.add(entity1.pos.sub(entity2.pos).unit().multiply(dt * 30));
+    if (entity2.isProjectile) {
+        entity1.velocity = vel2 ;
     }
     if (!entity2.unmovable) {
-        entity2.velocity = vel.add(entity2.pos.sub(entity1.pos).unit().multiply(dt * 30));
+        //entity2.velocity = entity2.velocity.add(vel1.multiply(weight1)).divide(weight2);
     }
+    
 
     if (entity1.hit) { entity1.hit(entity2); }
     if (entity2.hit) { entity2.hit(entity1); }
 
-    if (entity1.group == entity2.group) { return; }
+    if (entity1.group == entity2.group) {return; }
     if (table.find(entity1.activecollisions,entity2)) { return; }
     
     entity2.damage(entity1.dmg || 1,entity1);
@@ -517,7 +531,7 @@ class projectile {
             return;
         }
 
-        collide(this,dt);
+        //collide(this,dt);
     }
     render() {
         draw(this,this.layer,this.buffer);

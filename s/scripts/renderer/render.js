@@ -1,23 +1,33 @@
 import { Add as AddTick, Remove, Remove as RemoveTick, setRenderer } from "../engine/frame.js";
 import { v2 } from "../lib/classes.js";
+import { table } from "../lib/table.js";
 import { BlankBuffer } from "../lib/texture.js";
+import { Load as LoadUI } from "../engine/ui.js";
 
 export const width = 384;
 export const height = 256;
 
 let x = 0, y = 0;
 let sx = 0, sy = 0;
+let currentscale = 1;
 export const GetMouse = () => {
     return new v2(sx,sy);
 }
 
+let mouseEvents = [];
+
+export const AddMouseEvent = event => {
+    table.insert(mouseEvents,event);
+}
 export const Load = (canvas, draw) => {
     setRenderer(dt => {main(canvas,draw);});
 
     canvas.onmousemove = event => {
         x = event.offsetX;
         y = event.offsetY;
+        table.iterate(mouseEvents, event => { event(x / currentscale,y / currentscale); })
     }
+    LoadUI(canvas);
 }
 export const Layers = {
     Stars: BlankBuffer(width,height),
@@ -58,6 +68,7 @@ export const Shake = (strength,fade) => {
 
 const main = (canvas, d) => {
     const scale = Math.min(document.body.offsetWidth / width, document.body.offsetHeight / height);
+    currentscale = scale;
     sx = x / scale;
     sy = y / scale;
 
@@ -73,6 +84,7 @@ const main = (canvas, d) => {
     draw.drawImage(Layers.Player.Buffer,0,0);
     draw.drawImage(Layers.XP.Buffer,0,0);
     draw.drawImage(Layers.hud.Buffer,0,0);
+    draw.drawImage(Layers.shop.Buffer,0,0);
 
     bufferIndex ++;
     if (bufferIndex >= buffers) { bufferIndex = 0; }
