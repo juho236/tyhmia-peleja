@@ -17,6 +17,8 @@ let power = {
     defense: 0,
     toughness: 0,
     shootspeed: 6,
+    laserspeed: 350,
+    turnspeed: 7,
     weight: 0.02
 }
 export const AddPower = (key, value) => {
@@ -76,7 +78,7 @@ export const Load = async () => {
     playerEntity.maxspeed = 128;
     playerEntity.acceleration = 5;
     playerEntity.deceleration = 3;
-    playerEntity.turnspeed = 7;
+    playerEntity.turnspeed = power.turnspeed;
     playerEntity.weight = 3;
     //playerEntity.nocollisioncheck = true;
 
@@ -210,7 +212,7 @@ const shoot = (playerEntity,dir) => {
     playerEntity.rightlaser.emit();
     
     dir += (Math.random() - 0.5) * 0.05;
-    const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(350),new v2(16,16),new v2(14,14),Layers.Projectiles,lasertextures)
+    const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(power.laserspeed),new v2(16,16),new v2(32,32),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;
 

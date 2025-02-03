@@ -61,9 +61,12 @@ const shop = {
     defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensebasic0: new Upgrade("+3 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.","Defense basic",() => { player.defense += 3; AddPower("defense",3); }),
     defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.","Defense health",() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
-    defensetoughness0: new Upgrade("+1 toughness","Adds tough plating\nto your ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
+    defensetoughness0: new Upgrade("+1\ntoughness","Adds tough plating\nto your ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
 
-    utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; })
+    utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; }),
+    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.","Utility Basic", () => { xpmultiplier += 0.5; }),
+    utilityspeed0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.","Utility Speed",() => { AddPower("laserspeed",250); }),
+
 }
 const mainpathes = [
     new Path("Damagepath","P0",shop.dmgroot,[
@@ -76,7 +79,10 @@ const mainpathes = [
         new Path("DefenseHealth","P0-1",shop.defensehealth0,[]),
         new Path("DefenseToughness","P0-1",shop.defensetoughness0,[]),
     ],true),
-    new Path("Utilitypath","P0",shop.utilityroot,[],true)
+    new Path("Utilitypath","P0",shop.utilityroot,[
+        new Path("UtilityBasic","P0-2",shop.utilitybasic0,[]),
+        new Path("UtilitySpeed","P0-2",shop.utilityspeed0,[]),
+    ],true)
 ];
 
 let ui;
@@ -155,6 +161,10 @@ const promptPurchase = async completed => {
     let bg = ui.children.bg;
     let target = new Scale2(0,w,.5,0);
     
+    let opts = 0;
+    table.iterate(options, option => { if (!option) { return; } opts ++; });
+    if (opts <= 0) { completed(); return; }
+
     await tsize(bg,target);
     await new Promise(completed => {
         let c = {};
@@ -191,14 +201,19 @@ const promptPurchase = async completed => {
                         ui.redraw();
                     }
                 },{
-                    title: new Text({text: upg.display, size: new Scale2(1,0,.2,0), textsize: 16}),
-                    desc: new Text({text: upg.desc, textsize: 10, size: new Scale2(1,0,.3,0), pos: new Scale2(0,0,.2,0)})
+                    title: new Text({text: upg.display, size: new Scale2(1,0,.3,0), textsize: 14}),
+                    desc: new Text({text: upg.desc, textsize: 10, size: new Scale2(1,0,.3,0), pos: new Scale2(0,0,.25,0)})
                 }
             );
             
             c[option.name] = f
             index ++;
         });
+
+        if (index <= 0) {
+            completed();
+            return;
+        }
         c.title = new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(1,0,0,64), anchor: new Anchor(.5,.5), text: "Choose upgrade", textsize: 25});
         bg.children = c;
         ui.redraw();
@@ -209,25 +224,25 @@ const promptPurchase = async completed => {
 
 
 let score = 0;
-let level = 0;
-let savedScore = 350;
+let level = -5;
+let savedScore = 0;
 
 let xptextures4;
 let xptextures6;
 
 let player;
 const spawn = (x,y,textures,texture) => {
-    let p = new AmbientEntity("XPSmall",new v2(4,4),new v2(4,4),Layers.XP,textures);
+    let p = new AmbientEntity("XP",new v2(4,4),new v2(4,4),Layers.XP,textures);
     p.texture = texture;
     p.pos = new v2(x,y);
     const rot = Math.random() * Math.PI * 2;
-    p.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(50 + Math.random() * 40);
+    p.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(50 + Math.random() * 90);
     
     let opos;
     let timer = 0;
     let speed = 0;
     let e;
-    let s = (1 + Math.random());
+    let s = (0.8 + Math.random() * 2);
     e = Add(dt => {
         timer += dt * s;
         if (timer < 1) { p.frame(dt); p.render(); return; }
