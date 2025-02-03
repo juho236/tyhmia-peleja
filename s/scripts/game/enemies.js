@@ -225,7 +225,7 @@ const LoadEnemies = () => {
             }
         },
         smallmeteor: {
-            textures: {default: "assets/meteor-small1.png"},
+            textures: {default: "assets/meteor-small1.png", default1: "assets/meteor-small2.png"},
             width: 16,
             height: 16,
             size: new v2(16,16),
@@ -249,6 +249,7 @@ const LoadEnemies = () => {
     
             },
             load: e => {
+                //e.texture = e.textures["default"+(Math.floor(Math.random() * 2)).toString()];
                 e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
             },
             ondamage: e => {

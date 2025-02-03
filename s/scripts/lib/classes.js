@@ -414,11 +414,18 @@ const collision = (entity1, entity2, dt) => {
     let vel1 = entity1.velocity;
     let vel2 = entity2.velocity;
 
-    if (entity2.isProjectile) {
-        entity1.velocity = vel2 ;
+    if (!entity1.unmovable) {
+        if (entity2.isProjectile) {
+            entity1.velocity = entity1.velocity.add(vel2.multiply(weight2 / weight1));
+        }
+        
+        let d = entity1.pos.sub(entity2.pos);
+        entity1.velocity = entity1.velocity.add(d.unit().multiply(64 - d.magnitude()).multiply(dt));
+
     }
     if (!entity2.unmovable) {
-        //entity2.velocity = entity2.velocity.add(vel1.multiply(weight1)).divide(weight2);
+        let d = entity2.pos.sub(entity1.pos);
+        entity2.velocity = entity2.velocity.add(d.unit().multiply(64 - d.magnitude()).multiply(dt));
     }
     
 

@@ -11,11 +11,11 @@ import { UILayer, Frame, Scale2, Anchor, Color } from "../engine/ui.js";
 import { LoadScore } from "./score.js";
 
 let power = {
-    maxhealth: 100,
-    pierce: 7,
-    dmg: 5,
-    shootspeed: 8,
-    weight: 0.05
+    maxhealth: 75,
+    pierce: 2,
+    dmg: 6,
+    shootspeed: 6,
+    weight: 0.02
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -76,7 +76,7 @@ export const Load = async () => {
     playerEntity.deceleration = 3;
     playerEntity.turnspeed = 7;
     playerEntity.weight = 3;
-    playerEntity.nocollisioncheck = true;
+    //playerEntity.nocollisioncheck = true;
 
     playerEntity.shootspeed = power.shootspeed;
     playerEntity.shootTimer = 0;
@@ -161,6 +161,7 @@ export const Load = async () => {
     playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
 
     playerEntity.ondamage = (p,dmg) => {
+        console.log(dmg);
         healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
         Shake(dmg / 2,0.5);
         hud.redraw();

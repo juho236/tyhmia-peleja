@@ -17,21 +17,36 @@ class Upgrade {
 }
 
 let availablePathes = {};
+let unlockedPathes = {};
+const unlock = unlocks => {
+    if (!unlocks) { return; }
+    table.iterate(unlocks,u => { if (!u) { return; } u.priority ++; unlock(u.unlocks); });
+}
 class Path {
-    constructor(name,upg,unlocks,unlocked) {
+    constructor(name,path,upg,unlocks,unlocked) {
         this.name = name;
+        this.path = path;
         this.upgrade = upg;
         this.unlocks = unlocks;
         this.weight = 1;
         this.priority = 0;
-        console.log(unlocks);
+        unlock(this.unlocks);
 
         if (unlocked) { this.unlock(); }
+    }
+    remove() {
+        table.remove(availablePathes[this.priority],this);
+        if (!unlockedPathes[this.path]) { unlockedPathes[this.path] = 1; return; }
+        unlockedPathes[this.path]++;
+        if (unlockedPathes[this.path] < 2) { return; }
+
+        availablePathes[this.priority] = 0;
     }
 
     unlock() {
         if (!availablePathes[this.priority]) { availablePathes[this.priority] = []; }
 
+        console.log("Unlocked",this);
         table.insert(availablePathes[this.priority],this);
     }
 }
@@ -46,10 +61,14 @@ const shop = {
     defenseroot: new Upgrade("+50 hp","The ship can\ntake an\nadditional\n50 hp\nof damage.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; })
 }
-const pathes = [
-    new Path("Damagepath",shop.dmgroot,[],true),
-    new Path("Defensepath",shop.defenseroot,[],true),
-    new Path("Utilitypath",shop.utilityroot,[],true)
+const mainpathes = [
+    new Path("Damagepath","P0",shop.dmgroot,[
+        new Path("DamageBasic","P0-0",shop.dmgbasic0,[]),
+        new Path("DamagePierce","P0-0",shop.dmgpierce0,[]),
+        new Path("DamageSpeed","P0-0",shop.dmgspeed0,[])
+    ],true),
+    new Path("Defensepath","P0",shop.defenseroot,[],true),
+    new Path("Utilitypath","P0",shop.utilityroot,[],true)
 ];
 
 let ui;
@@ -76,12 +95,50 @@ const tsize = async (bg, target) => {
     })
 }
 
+const weightCheck = array => {
+    if (!array) { return 0; }
+    let total = 0;
+    let opt = [];
+    table.iterate(array,item => {
+        if (!item) { return; }
+        let w = item.weight;
+        if (w <= 0) { item.weight ++; return; }
+
+        table.insert(opt,item);
+        total += w;
+    });
+
+    if (total <= 0) { return 0; }
+
+    let d = 0;
+    let n = Math.floor(Math.random() * total);
+    let v = 0;
+    table.iterate(opt,item => {
+        d += item.weight;
+        if (n < d) { item.weight = -1; v = item; return -1; }
+
+        item.weight ++;
+    });
+
+    return v;
+}
+
 const promptPurchase = async completed => {
-    let options = availablePathes[0];
+    let options = [];
+
+    let greatest = 0;
+    let least = Infinity;
+    table.pairs(availablePathes,(priority) => {
+        greatest = Math.max(greatest,priority);
+        least = Math.min(priority,least);
+    });
+    options[0] = weightCheck(availablePathes[greatest]);
+    options[1] = weightCheck(availablePathes[greatest]);
+    options[2] = weightCheck(availablePathes[least]);
+    if (options[2]) { options[2].weight = 0; }
+    
     let w = 2;
     let s = 82;
-
-    console.log(options);
     table.iterate(options, option => {
         if (!option) { return; }
         w += s + 2;
@@ -93,7 +150,9 @@ const promptPurchase = async completed => {
     await tsize(bg,target);
     await new Promise(completed => {
         let c = {};
-        table.iterate(options, (option, index) => {
+        let canclick = true;
+        let index = 0;
+        table.iterate(options, option => {
             if (!option) { return; }
             let upg = option.upgrade;
 
@@ -105,9 +164,13 @@ const promptPurchase = async completed => {
                     anchor: new Anchor(0,0), 
                     color: new Color(0,0,0,255),
                     onclick: () => {
+                        if (!canclick) { return; }
+                        canclick = false;
                         upg.callback();
+                        if (option.unlocks) { table.iterate(option.unlocks,unlock => { unlock.unlock(); }); }
                         bg.children = {};
                         ui.redraw();
+                        option.remove();
                         completed();
                     },
                     onhover: () => {
@@ -125,7 +188,9 @@ const promptPurchase = async completed => {
             );
             
             c[option.name] = f
+            index ++;
         });
+        c.title = new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(1,0,0,64), anchor: new Anchor(.5,.5), text: "Choose upgrade", textsize: 25});
         bg.children = c;
         ui.redraw();
     });
@@ -153,11 +218,12 @@ const spawn = (x,y,textures,texture) => {
     let timer = 0;
     let speed = 0;
     let e;
+    let s = (1 + Math.random());
     e = Add(dt => {
-        timer += dt * (1 + Math.random());
+        timer += dt * s;
         if (timer < 1) { p.frame(dt); p.render(); return; }
         if (!opos) { opos = p.pos; }
-        speed += dt * (1 + Math.random());
+        speed += dt * s;
         if (speed < 1) {
             p.pos = opos.lerp(player.pos,speed * speed);
             p.render();
