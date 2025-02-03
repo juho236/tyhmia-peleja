@@ -73,6 +73,11 @@ export const Resume = () => {
     fspeed = 1;
 }
 
+let framecancel = false;
+export const CancelFrame = () => {
+    framecancel = true;
+}
+
 const frame = () => {
     if (!run) { return; }
 
@@ -93,7 +98,7 @@ const frame = () => {
         ClearLayer(Layers.Player);
         ClearLayer(Layers.XP);
 
-        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); });
+        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); if (framecancel) { framecancel = false; return -1; } });
         table.iterate(independent,callback => { if (!callback) { return; } callback(1 / frameRate); });
 
         try {

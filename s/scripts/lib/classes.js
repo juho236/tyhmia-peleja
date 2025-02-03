@@ -348,10 +348,14 @@ export class entity {
     damage(dmg, damager) {
         if (this.inactive) { return; }
         if (this.iframes && !damager.ignoreIframes && (this.idamage && this.idamage >= dmg)) { return; }
-        this.health = Math.max(0,this.health - dmg);
         this.flash = 0.1;
         this.iframes = this.inv;
         this.idamage = dmg;
+
+        if (this.toughness) { dmg = Math.max(1,dmg - Math.min(this.maxhealth * 0.8,dmg * Math.min(dmg - 5,40) * this.toughness / 100)); }
+        if (this.defense) { dmg = Math.max(1,dmg - this.defense); }
+
+        this.health = Math.max(0,this.health - dmg);
 
         if (this.ondamage) { this.ondamage(this,dmg); }
         if (this.health <= 0) { if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); } this.died(); }

@@ -5,7 +5,7 @@ import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
 import { SaveScore } from "./score.js";
 
-let waveIndex = 0;
+let waveIndex = 6;
 
 let waves = [
     {pattern: [

@@ -1,5 +1,5 @@
 import { Layers, width, height, GetMouse, Shake } from "../renderer/render.js";
-import { Add as AddTick } from "../engine/frame.js";
+import { Add as AddTick, CancelFrame } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
 import { v2, entity, laserParticleEmitter, LaserProjectile, dustParticleEmitter, fireParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
@@ -14,6 +14,8 @@ let power = {
     maxhealth: 75,
     pierce: 2,
     dmg: 6,
+    defense: 0,
+    toughness: 0,
     shootspeed: 6,
     weight: 0.02
 }
@@ -122,6 +124,8 @@ export const Load = async () => {
         playerEntity.render();
     });
 
+    playerEntity.defense = power.defense;
+    playerEntity.toughness = power.toughness;
     playerEntity.maxhealth = power.maxhealth;
     playerEntity.health = playerEntity.maxhealth;
 
@@ -140,6 +144,7 @@ export const Load = async () => {
 
 
     playerEntity.removing = () => {
+        CancelFrame();
         Load();
     }
     playerEntity.died = () => {
@@ -161,7 +166,6 @@ export const Load = async () => {
     playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
 
     playerEntity.ondamage = (p,dmg) => {
-        console.log(dmg);
         healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
         Shake(dmg / 2,0.5);
         hud.redraw();

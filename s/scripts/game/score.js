@@ -53,12 +53,16 @@ class Path {
 
 let xpmultiplier = 1;
 const shop = {
-    dmgroot: new Upgrade("+2 damage","The ship lasers\nwill deal an\nadditional\n2 damage\non hit.","Damage",() => { AddPower("dmg",2); }),
-    dmgbasic0: new Upgrade("+3 damage","The ship lasers\nwill deal an\nadditional\n3 damage.","Damage basic",() => { AddPower("dmg",3); }),
-    dmgpierce0: new Upgrade("+2 pierce","Empowers the lasers\nto pierce through\n2 additional\ntargets.","Damage pierce",() => { AddPower("dmg",3); }),
-    dmgspeed0: new Upgrade("+2 speed","Overclocks the laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.","Damage speed",() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
+    dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.","Damage",() => { AddPower("dmg",2); }),
+    dmgbasic0: new Upgrade("+3 damage","Your ship's lasers\nwill deal an\nadditional\n3 damage.","Damage basic",() => { AddPower("dmg",3); }),
+    dmgpierce0: new Upgrade("+2 pierce","Empowers\nthe lasers\nto pierce through\n2 additional\ntargets.","Damage pierce",() => { AddPower("dmg",3); }),
+    dmgspeed0: new Upgrade("+2 speed","Overclocks\nthe laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.","Damage speed",() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
 
-    defenseroot: new Upgrade("+50 hp","The ship can\ntake an\nadditional\n50 hp\nof damage.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defensebasic0: new Upgrade("+3 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.","Defense basic",() => { player.defense += 3; AddPower("defense",3); }),
+    defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.","Defense health",() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
+    defensetoughness0: new Upgrade("+1 toughness","Adds tough plating\nto your ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
+
     utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; })
 }
 const mainpathes = [
@@ -67,7 +71,11 @@ const mainpathes = [
         new Path("DamagePierce","P0-0",shop.dmgpierce0,[]),
         new Path("DamageSpeed","P0-0",shop.dmgspeed0,[])
     ],true),
-    new Path("Defensepath","P0",shop.defenseroot,[],true),
+    new Path("Defensepath","P0",shop.defenseroot,[
+        new Path("DefenseBasic","P0-1",shop.defensebasic0,[]),
+        new Path("DefenseHealth","P0-1",shop.defensehealth0,[]),
+        new Path("DefenseToughness","P0-1",shop.defensetoughness0,[]),
+    ],true),
     new Path("Utilitypath","P0",shop.utilityroot,[],true)
 ];
 
@@ -155,6 +163,7 @@ const promptPurchase = async completed => {
         table.iterate(options, option => {
             if (!option) { return; }
             let upg = option.upgrade;
+            option.weight = Math.max(option.weight,0);
 
             let f;
             f = new Frame(
@@ -201,7 +210,7 @@ const promptPurchase = async completed => {
 
 let score = 0;
 let level = 0;
-let savedScore = 0;
+let savedScore = 350;
 
 let xptextures4;
 let xptextures6;
