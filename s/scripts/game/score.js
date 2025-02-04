@@ -38,15 +38,11 @@ class Path {
         table.remove(availablePathes[this.priority],this);
         if (!unlockedPathes[this.path]) { unlockedPathes[this.path] = 1; return; }
         unlockedPathes[this.path]++;
-        if (unlockedPathes[this.path] < 2) { return; }
-
-        availablePathes[this.priority] = 0;
     }
 
     unlock() {
         if (!availablePathes[this.priority]) { availablePathes[this.priority] = []; }
 
-        console.log("Unlocked",this);
         table.insert(availablePathes[this.priority],this);
     }
 }
@@ -64,9 +60,9 @@ const shop = {
     defensetoughness0: new Upgrade("+1\ntoughness","Adds tough plating\nto your ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
 
     utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; }),
-    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.","Utility Basic", () => { xpmultiplier += 0.5; }),
-    utilityspeed0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.","Utility Speed",() => { AddPower("laserspeed",250); }),
-
+    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.","Utility basic", () => { xpmultiplier += 0.5; }),
+    utilitylaser0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.","Utility lasers",() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
+    utilityspeed0: new Upgrade("100%\nacceleration","Your ship\nwill accelerate\ntwice as fast.","Utility speed",() => { player.acceleration += 5; AddPower("acceleration",5); }),
 }
 const mainpathes = [
     new Path("Damagepath","P0",shop.dmgroot,[
@@ -81,6 +77,7 @@ const mainpathes = [
     ],true),
     new Path("Utilitypath","P0",shop.utilityroot,[
         new Path("UtilityBasic","P0-2",shop.utilitybasic0,[]),
+        new Path("UtilityLaser","P0-2",shop.utilitylaser0,[]),
         new Path("UtilitySpeed","P0-2",shop.utilityspeed0,[]),
     ],true)
 ];
@@ -113,15 +110,19 @@ const weightCheck = array => {
     if (!array) { return 0; }
     let total = 0;
     let opt = [];
+    let c = 0, b;
     table.iterate(array,item => {
         if (!item) { return; }
         let w = item.weight;
+        c ++;
+        b = item;
         if (w <= 0) { item.weight ++; return; }
 
         table.insert(opt,item);
         total += w;
     });
 
+    if (c == 1) { return b; }
     if (total <= 0) { return 0; }
 
     let d = 0;
@@ -142,13 +143,29 @@ const promptPurchase = async completed => {
 
     let greatest = 0;
     let least = Infinity;
-    table.pairs(availablePathes,(priority) => {
+    let opt = {};
+    table.pairs(availablePathes,(priority,array) => {
+        if (!array) { return; }
+        let opts = [];
+        let c = 0;
+        table.iterate(array, item => {
+            if (!item) { return; }
+            let p = unlockedPathes[item.path];
+            if (p && p >= 2) { return; }
+
+            c ++;
+            table.insert(opts,item);
+        });
+        if (c <= 0) { return; }
+
+        opt[priority] = opts;
         greatest = Math.max(greatest,priority);
         least = Math.min(priority,least);
     });
-    options[0] = weightCheck(availablePathes[greatest]);
-    options[1] = weightCheck(availablePathes[greatest]);
-    options[2] = weightCheck(availablePathes[least]);
+    console.log(opt);
+    options[0] = weightCheck(opt[greatest]);
+    options[1] = weightCheck(opt[greatest]);
+    options[2] = weightCheck(opt[least]);
     if (options[2]) { options[2].weight = 0; }
     
     let w = 2;
@@ -224,7 +241,7 @@ const promptPurchase = async completed => {
 
 
 let score = 0;
-let level = -5;
+let level = 0;
 let savedScore = 0;
 
 let xptextures4;

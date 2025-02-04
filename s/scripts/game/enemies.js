@@ -3,9 +3,10 @@ import { ClampAngle, v2, ExplosionProjectile, dustParticleEmitter, entity, fireP
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
+import { boss1 } from "./bosses/boss1.js";
 import { SaveScore } from "./score.js";
 
-let waveIndex = 6;
+let waveIndex = 9;
 
 let waves = [
     {pattern: [
@@ -44,6 +45,9 @@ let waves = [
         {id: "enemy",enemy: "mine",count: 5,time: 3,parallel: true},
         {id: "enemy",enemy: "missile",count: 5,time: 3},
     ]},
+    {pattern: [
+        {id: "enemy",enemy: "boss1",count: 1,time: 0}
+    ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -92,6 +96,35 @@ const LoadEnemies = () => {
             width: 5,
             height: 5,
         },
+        boss1: {
+            textures: {default: "assets/bigship.png"},
+            width: 64,
+            height: 64,
+            size: new v2(64,64),
+            hitbox: 30,
+            score: 250,
+            health: 2800,
+            oob: true,
+            load: e => {
+                boss1.load(e,player);
+            },
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                boss1.ai(e,dt);
+            },
+            died: e => {
+                boss1.died(e);
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 5;
+            }
+        },
         missile: {
             textures: {default: "assets/mine-small1.png"},
             width: 8,
@@ -100,8 +133,9 @@ const LoadEnemies = () => {
             hitbox: 2,
             score: 12,
             health: 75,
+            oob: true,
             load: e => {
-                e.lock = 5;
+                e.lock = 7;
                 e.weight = 50;
                 e.velocity = player.pos.sub(e.pos).unit().multiply(40);
                 e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
@@ -152,6 +186,7 @@ const LoadEnemies = () => {
             hitbox: 6,
             score: 8,
             health: 25,
+            oob: true,
             ai: (e, dt) => {
                 if (e.removetimer) {
                     e.removetimer -= dt;
@@ -269,6 +304,7 @@ const LoadEnemies = () => {
                     const rot = a * Math.PI * 2;
                     spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
                     spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
+                    spawn.iframes = 0.25;
                 }
                 e.invisible = true;
                 e.removetimer = 4;

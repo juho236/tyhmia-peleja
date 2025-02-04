@@ -347,7 +347,7 @@ export class entity {
 
     damage(dmg, damager) {
         if (this.inactive) { return; }
-        if (this.iframes && !damager.ignoreIframes && (this.idamage && this.idamage >= dmg)) { return; }
+        if (this.iframes && !damager.ignoreIframes && (!this.idamage || this.idamage >= dmg)) { return; }
         this.flash = 0.1;
         this.iframes = this.inv;
         this.idamage = dmg;
@@ -357,7 +357,7 @@ export class entity {
 
         this.health = Math.max(0,this.health - dmg);
 
-        if (this.ondamage) { this.ondamage(this,dmg); }
+        if (this.ondamage) { this.ondamage(this,dmg,damager); }
         if (this.health <= 0) { if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); } this.died(); }
     }
     
@@ -485,11 +485,11 @@ const collide = (target,dt) => {
         return collision(target,entity,dt);
     });
 
-    //table.iterate(target.activecollisions, entity => {
-    //    if (table.find(target.collisions,entity)) { return; }
-    //    table.remove(target.activecollisions, entity);
-    //});
     if (!target.collisions) { return; }
+    table.iterate(target.activecollisions, entity => {
+        if (table.find(target.collisions,entity)) { return; }
+        table.remove(target.activecollisions, entity);
+    });
     table.iterate(target.collisions, entity => {
         if (table.find(target.activecollisions,entity)) { return; }
         table.insert(target.activecollisions,entity);
@@ -555,7 +555,6 @@ export class LaserProjectile extends projectile {
 
         this.nosamegroup = true;
         this.unmovable = true;
-        this.ignoreIframes = true;
         this.lifetime = 5;
     }
 

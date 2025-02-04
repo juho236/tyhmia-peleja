@@ -19,7 +19,9 @@ let power = {
     shootspeed: 6,
     laserspeed: 350,
     turnspeed: 7,
-    weight: 0.02
+    acceleration: 5,
+    weight: 0.02,
+    sweight: 3,
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -76,7 +78,7 @@ export const Load = async () => {
     playerEntity.speed = 10;
     playerEntity.pos = new v2(width / 2,height - 64);
     playerEntity.maxspeed = 128;
-    playerEntity.acceleration = 5;
+    playerEntity.acceleration = power.acceleration;
     playerEntity.deceleration = 3;
     playerEntity.turnspeed = power.turnspeed;
     playerEntity.weight = 3;
@@ -128,6 +130,7 @@ export const Load = async () => {
 
     playerEntity.defense = power.defense;
     playerEntity.toughness = power.toughness;
+    playerEntity.weight = power.sweight;
     playerEntity.maxhealth = power.maxhealth;
     playerEntity.health = playerEntity.maxhealth;
 
@@ -167,10 +170,13 @@ export const Load = async () => {
     playerEntity.scraps = new dustParticleEmitter("Scrap",0,playerEntity,new v2(0,0),scrap,new v2(4,4));
     playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
 
-    playerEntity.ondamage = (p,dmg) => {
+    playerEntity.ondamage = (p,dmg,dmgr) => {
         healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
         Shake(dmg / 2,0.5);
         hud.redraw();
+
+        if (!dmgr) { return; }
+        playerEntity.velocity = playerEntity.velocity.add(dmgr.velocity.multiply((dmgr.weight || 1) / playerEntity.weight));
     }
 
     SetPlayer(playerEntity);
@@ -212,7 +218,7 @@ const shoot = (playerEntity,dir) => {
     playerEntity.rightlaser.emit();
     
     dir += (Math.random() - 0.5) * 0.05;
-    const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos,new v2(Math.sin(dir),-Math.cos(dir)).multiply(power.laserspeed),new v2(16,16),new v2(32,32),Layers.Projectiles,lasertextures)
+    const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos.add(new v2(Math.sin(dir),-Math.cos(dir)).multiply(8)),new v2(Math.sin(dir),-Math.cos(dir)).multiply(power.laserspeed),new v2(16,16),new v2(32,32),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;
 
