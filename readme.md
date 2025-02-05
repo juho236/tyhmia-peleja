@@ -1,6 +1,8 @@
 # todella tyhmiä asioita tehty koulussa silloin kun olen saanut muut tehtävät tehtyä jotta en kuolisi tylsyyteen
 ![Tärkein](1000-yard-stare-cat.gif)
 
+[Avaruusrakettipeli](s)
+
 Kuvia kissoista koska
 
 ![Todella tärkeätä](cat-dancing-meme-dancing.gif)
