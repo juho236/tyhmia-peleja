@@ -1,6 +1,6 @@
-import { v2 } from "../../lib/classes.js";
+import { LaserProjectile, laserParticleEmitter, transform, v2 } from "../../lib/classes.js";
 import { weightCheck } from "../../lib/random.js";
-import { height, width } from "../../renderer/render.js";
+import { Layers, height, width } from "../../renderer/render.js";
 
 let player;
 let attacks = {
@@ -12,10 +12,10 @@ let attacks = {
         t += Math.sqrt(t) / 3;
         turnTo(e,player.pos.add(player.velocity.multiply(t)));
         e.phase = chargeback;
-    }}, chase: {weight: 1, ai: e => {
+    }}, chase: {weight: 19999, ai: e => {
         e.timer = 10 + Math.random() * 10;
         e.phase = chase;
-    }}, center: {weight: 1000000, ai: e => {
+    }}, center: {weight: 1, ai: e => {
         e.timer = 1;
 
 
@@ -24,14 +24,21 @@ let attacks = {
         e.phase = gotocenter;
     }},
 };
-
 export const boss1 = {
-    load: (e,plr) => {
+    load: (e,plr,laserTextures,lasertextures) => {
         e.timer = 1;
         e.weight = 5;
         e.phase = start;
         e.turnspeed = 3;
+        e.laserTextures = laserTextures;
+        e.lasertextures = lasertextures;
+        e.shootspeed = 0;
         player = plr;
+        
+        e.leftLaserLeft = new laserParticleEmitter("LeftLaser",0,e,new v2(-30,-21),laserTextures,new v2(9,9));
+        e.leftLaserRight = new laserParticleEmitter("RightLaser",0,e,new v2(-18,-21),laserTextures,new v2(9,9));
+        e.rightLaserLeft = new laserParticleEmitter("LeftLaser",0,e,new v2(18,-21),laserTextures,new v2(9,9));
+        e.rightLaserRight = new laserParticleEmitter("RightLaser",0,e,new v2(30,-21),laserTextures,new v2(9,9));
     },
     ai: (e, dt) => {
         e.phase(e,dt);
@@ -41,6 +48,33 @@ export const boss1 = {
     }
 }
 
+const shoot = e => {
+    e.leftLaserLeft.emit();
+    e.leftLaserRight.emit();
+    e.rightLaserLeft.emit();
+    e.rightLaserRight.emit();
+    
+    let rot = e.rot;
+    let dir = rot;
+    let speed = 250;
+    let p = 5;
+    let d = 15;
+    let w = 0.2;
+    
+    const t1 = new LaserProjectile("Bosslaser","Enemy",e.pos.add(transform(rot,new v2(-24,-18))),new v2(Math.sin(dir),-Math.cos(dir)).multiply(speed),new v2(16,16),new v2(14,14),Layers.Projectiles,e.lasertextures);
+    t1.texture = t1.textures.default;
+    t1.textures2 = e.laserTextures;
+    t1.pierce = p;
+    t1.dmg = d;
+    t1.weight = w;
+    
+    const t2 = new LaserProjectile("Bosslaser","Enemy",e.pos.add(transform(rot,new v2(24,-18))),new v2(Math.sin(dir),-Math.cos(dir)).multiply(speed),new v2(16,16),new v2(14,14),Layers.Projectiles,e.lasertextures);
+    t2.texture = t2.textures.default;
+    t2.textures2 = e.laserTextures;
+    t2.pierce = p;
+    t2.dmg = d;
+    t2.weight = w;
+}
 const start = (e,dt) => {
     e.timer -= dt;
     if (e.timer > 0) { return; }
@@ -91,6 +125,8 @@ const chase = (e,dt) => {
     let tpos = player.pos.add(player.velocity.multiply(t));
     turnTo(e,player.pos);
 
+    //e.shootspeed += dt;
+    //if (e.shootspeed > 0) { e.shootspeed -= 1; shoot(e); }
     e.timer -= dt;
     if (e.timer > 0) {
         e.velocity = e.velocity.add(tpos.sub(e.pos).unit().multiply(dt * 350));
@@ -132,10 +168,12 @@ const gotocenter = (e,dt) => {
 }
 const center = (e,dt) => {
     e.trot += e.rotspeed * dt;
-    e.rotspeed += dt;
+    e.rotspeed += dt / 10;
     e.rot = e.trot;
     e.pos = new v2(width/2,height/2);
     e.velocity = new v2(0,0);
+    e.shootspeed += dt * 10;
+    if (e.shootspeed > 0) { e.shootspeed -= 1; shoot(e); }
 
     e.timer -= dt;
     if (e.timer > 0) { return; }

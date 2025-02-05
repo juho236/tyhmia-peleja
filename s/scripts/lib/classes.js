@@ -302,7 +302,7 @@ class LaserHitParticleEmitter extends OrderEmit {
 const changeTexture = (particle,max) => {
     particle.texture = particle.textures[`${particle.path}${Math.floor(Math.random() * max)}`];
 }
-const transform = (rot,offset) => {
+export const transform = (rot,offset) => {
     return new v2(Math.cos(rot) * offset.x - Math.sin(rot) * offset.y,Math.sin(rot) * offset.x + Math.cos(rot) * offset.y);
 }
 

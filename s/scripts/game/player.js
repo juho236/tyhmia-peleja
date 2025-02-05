@@ -22,6 +22,7 @@ let power = {
     acceleration: 5,
     weight: 0.02,
     sweight: 3,
+    inaccuracy: 0.05,
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -217,7 +218,7 @@ const shoot = (playerEntity,dir) => {
     playerEntity.leftLaser.emit();
     playerEntity.rightlaser.emit();
     
-    dir += (Math.random() - 0.5) * 0.05;
+    dir += (Math.random() - 0.5) * power.inaccuracy;
     const t = new LaserProjectile("PlayerLaser","player",playerEntity.pos.add(new v2(Math.sin(dir),-Math.cos(dir)).multiply(8)),new v2(Math.sin(dir),-Math.cos(dir)).multiply(power.laserspeed),new v2(16,16),new v2(32,32),Layers.Projectiles,lasertextures)
     t.texture = lasertextures.default;
     t.textures2 = lasertextures2;

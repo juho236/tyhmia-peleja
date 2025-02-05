@@ -4,9 +4,9 @@ import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
 import { boss1 } from "./bosses/boss1.js";
-import { SaveScore } from "./score.js";
+import { SaveScore, SetScore } from "./score.js";
 
-let waveIndex = 9;
+let waveIndex = 0;
 
 let waves = [
     {pattern: [
@@ -79,6 +79,24 @@ let enemies;
 
 const LoadEnemies = () => {
     enemies = {
+        laserprojectile: {
+            textures: {
+                default: "assets/enemylaser1.png"
+            },
+            width: 16,
+            height: 16
+        },
+        laser: {
+            textures: {
+                frame0: "assets/enemyshootlaser0.png",
+                frame1: "assets/enemyshootlaser1.png",
+                frame2: "assets/enemyshootlaser2.png",
+                frame3: "assets/enemyshootlaser3.png",
+                frame4: "assets/enemyshootlaser4.png",
+            },
+            width: 9,
+            height: 9
+        },
         fire: {
             textures: {
                 full0: "assets/trail-full0.png",
@@ -97,16 +115,18 @@ const LoadEnemies = () => {
             height: 5,
         },
         boss1: {
-            textures: {default: "assets/bigship.png"},
+            textures: {
+                default: "assets/bigship.png",
+            },
             width: 64,
             height: 64,
             size: new v2(64,64),
             hitbox: 30,
             score: 250,
-            health: 2800,
+            health: 1,
             oob: true,
             load: e => {
-                boss1.load(e,player);
+                boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures);
             },
             ai: (e, dt) => {
                 if (e.removetimer) {
@@ -389,8 +409,25 @@ export const LoadWave = () => {
     spawnWave(waveIndex);
 }
 
+const startFromWave = wave => {
+    waveIndex = wave;
+    let s = 0;
+    for (let i=0;i<wave;i++) {
+        const w = waves[i];
+        w.pattern.map(p => {
+            if (p.id != "enemy") { return; }
+            let enemy = enemies[p.enemy];
+            if (!enemy) { return; }
+
+            s += enemy.score * p.count;
+        });
+    }
+
+    //SetScore(s);
+}
 export const Load = async () => {
     LoadEnemies();
+    startFromWave(9);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

@@ -248,8 +248,8 @@ let xptextures4;
 let xptextures6;
 
 let player;
-const spawn = (x,y,textures,texture) => {
-    let p = new AmbientEntity("XP",new v2(4,4),new v2(4,4),Layers.XP,textures);
+const spawn = (x,y,S,textures,texture) => {
+    let p = new AmbientEntity("XP",new v2(S,S),new v2(S,S),Layers.XP,textures);
     p.texture = texture;
     p.pos = new v2(x,y);
     const rot = Math.random() * Math.PI * 2;
@@ -276,22 +276,22 @@ const spawn = (x,y,textures,texture) => {
 }
 const spawnTiny = (count,x,y) => {
     for (let i=0;i<count;i++) {
-        spawn(x,y,xptextures4,xptextures4.tiny);
+        spawn(x,y,4,xptextures4,xptextures4.tiny);
     }
 }
 const spawnSmall = (count,x,y) => {
     for (let i=0;i<count;i++) {
-        spawn(x,y,xptextures4,xptextures4.small);
+        spawn(x,y,4,xptextures4,xptextures4.small);
     }
 }
 const spawnMedium = (count,x,y) => {
     for (let i=0;i<count;i++) {
-        spawn(x,y,xptextures6,xptextures6.medium);
+        spawn(x,y,6,xptextures6,xptextures6.medium);
     }
 }
 const spawnBig = (count,x,y) => {
     for (let i=0;i<count;i++) {
-        spawn(x,y,xptextures6,xptextures6.big);
+        spawn(x,y,6,xptextures6,xptextures6.big);
     }
 }
 
@@ -299,15 +299,19 @@ export const SetPlayer = plr => {
     player = plr;
 }
 
+export const SetScore = sc => {
+    savedScore = sc;
+    score = sc;
+}
 export const AddScore = (sc,x,y) => {
     score += sc * xpmultiplier;
     
-    let big = Math.floor(sc / 50);
-    sc -= big * 50;
-    let medium = Math.floor(sc / 20);
-    sc -= medium * 20;
-    let small = Math.floor(sc / 5);
-    sc -= small * 5;
+    let big = Math.floor(sc / 10);
+    sc -= big * 4;
+    let medium = Math.floor(sc / 8);
+    sc -= medium * 2;
+    let small = Math.floor(sc / 3);
+    sc -= small;
     let tiny = sc;
 
     spawnBig(big,x,y);
