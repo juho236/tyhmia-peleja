@@ -30,14 +30,21 @@ export const AddPower = (key, value) => {
 
 let lasertextures;
 let lasertextures2;
+let playerEntity;
+export const SetPlayerDifficulty = diff => {
+    power.damagemultiplier = diff.damagemultiplier;
+    playerEntity.damagemultiplier = diff.damagemultiplier;
+}
+
 export const Load = async () => {
     SetSpeed(0);
-    const playerEntity = new entity("Player",new v2(16,16),new v2(4,4),Layers.Player,await TextureBuffers(await LoadTextures(
+    playerEntity = new entity("Player",new v2(16,16),new v2(4,4),Layers.Player,await TextureBuffers(await LoadTextures(
         {
             default: "assets/ship-forward.png"
         }
     ),16,16));
     playerEntity.group = "player";
+    playerEntity.damagemultiplier = power.damagemultiplier;
     playerEntity.texture = playerEntity.textures.default;
     playerEntity.inv = 2;
 
