@@ -1,6 +1,6 @@
 import { LaserProjectile, laserParticleEmitter, transform, v2 } from "../../lib/classes.js";
 import { weightCheck } from "../../lib/random.js";
-import { Layers, height, width } from "../../renderer/render.js";
+import { Layers, Shake, height, width } from "../../renderer/render.js";
 
 let player;
 let attacks = {
@@ -77,6 +77,7 @@ const dying = (e,dt) => {
     if (e.cycletimer >= 1) {
         e.cycletimer -= 1;
         e.cycle = -e.cycle;
+        Shake(2,0.5);
         
         
         e.pos = e.opos.add(new v2(e.cycle * 3,0));
@@ -84,6 +85,7 @@ const dying = (e,dt) => {
 
     e.timer -= dt;
     if (e.timer > 0) { return; }
+    Shake(200,3);
     e.death();
 }
 
