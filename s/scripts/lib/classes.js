@@ -351,6 +351,7 @@ export class entity {
         this.flash = 0.1;
         this.iframes = this.inv;
         this.idamage = dmg;
+        if (this.damagemultiplier) { dmg *= this.damagemultiplier; }
 
         if (this.toughness) { dmg = Math.max(1,dmg - Math.min(this.maxhealth * 0.8,dmg * Math.min(dmg - 5,40) * this.toughness / 100)); }
         if (this.defense) { dmg = Math.max(1,dmg - this.defense); }
