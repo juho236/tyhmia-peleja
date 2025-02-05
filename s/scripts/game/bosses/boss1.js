@@ -4,15 +4,18 @@ import { Layers, height, width } from "../../renderer/render.js";
 
 let player;
 let attacks = {
-    ram: {weight: 100, ai: (e) => {
-        e.timer = 0.8;
+    ram: {weight: 9999, ai: (e) => {
+        e.timer = 1;
         e.chargespeed = 450 + Math.random() * 85;
         
         let t = player.pos.sub(e.pos).magnitude() / e.chargespeed;
         t += Math.sqrt(t) / 3;
         turnTo(e,player.pos.add(player.velocity.multiply(t)));
         e.phase = chargeback;
-    }}, chase: {weight: 19999, ai: e => {
+        e.turnspeed = 10;
+        e.velocity = new v2(0,0);
+    }}, chase: {weight: 1, ai: e => {
+        e.turnspeed = 2;
         e.timer = 10 + Math.random() * 10;
         e.phase = chase;
     }}, center: {weight: 1, ai: e => {
@@ -39,13 +42,49 @@ export const boss1 = {
         e.leftLaserRight = new laserParticleEmitter("RightLaser",0,e,new v2(-18,-21),laserTextures,new v2(9,9));
         e.rightLaserLeft = new laserParticleEmitter("LeftLaser",0,e,new v2(18,-21),laserTextures,new v2(9,9));
         e.rightLaserRight = new laserParticleEmitter("RightLaser",0,e,new v2(30,-21),laserTextures,new v2(9,9));
+
+        e.deathEffect = boss1.died;
     },
     ai: (e, dt) => {
         e.phase(e,dt);
     },
-    died: e => {
-
+    died: async e => {
+        player.inactive = true;
+        e.inactive = true;
+        e.timer = 1;
+        e.ovel = e.velocity;
+        e.cycle = 1;
+        e.cycletimer = 0;
+        e.phase = slow;
+        await new Promise(completed => {e.death = completed});
     }
+}
+
+const slow = (e,dt) => {
+    e.velocity = e.velocity.sub(e.ovel.multiply(dt));
+
+    e.timer -= dt;
+    if (e.timer > 0) { return; }
+    e.velocity = new v2(0,0);
+
+    e.timer = 3;
+    e.opos = e.pos;
+    e.phase = dying;
+}
+const dying = (e,dt) => {
+    e.cycletimer += dt * 20;
+    e.dust.emit();
+    if (e.cycletimer >= 1) {
+        e.cycletimer -= 1;
+        e.cycle = -e.cycle;
+        
+        
+        e.pos = e.opos.add(new v2(e.cycle * 3,0));
+    }
+
+    e.timer -= dt;
+    if (e.timer > 0) { return; }
+    e.death();
 }
 
 const shoot = e => {
@@ -156,7 +195,7 @@ const charging = (e,dt) => {
 
     e.dmg = 1;
     
-    if (Math.random() > 0.5) { attacks.ram.ai(e); } else { e.phase = think; }
+    if (Math.random() >= 0.1) { attacks.ram.ai(e); } else { e.phase = think; }
 }
 
 const gotocenter = (e,dt) => {

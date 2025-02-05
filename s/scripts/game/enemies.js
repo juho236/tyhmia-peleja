@@ -122,10 +122,12 @@ const LoadEnemies = () => {
             height: 64,
             size: new v2(64,64),
             hitbox: 30,
-            score: 250,
-            health: 1,
+            score: 500,
+            health: 4600,
             oob: true,
             load: e => {
+                e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
                 boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures);
             },
             ai: (e, dt) => {
@@ -139,10 +141,13 @@ const LoadEnemies = () => {
                 boss1.ai(e,dt);
             },
             died: e => {
-                boss1.died(e);
                 e.inactive = true;
                 e.invisible = true;
                 e.removetimer = 5;
+
+                for (let i=0;i<64;i++) { e.fire.emit(); }
+                for (let i=0;i<64;i++) { e.dust.emit(); }
+                player.inactive = false;
             }
         },
         missile: {

@@ -345,7 +345,7 @@ export class entity {
     emitters = [];
     activecollisions = [];
 
-    damage(dmg, damager) {
+    async damage(dmg, damager) {
         if (this.inactive) { return; }
         if (this.iframes && !damager.ignoreIframes && (!this.idamage || this.idamage >= dmg)) { return; }
         this.flash = 0.1;
@@ -358,7 +358,11 @@ export class entity {
         this.health = Math.max(0,this.health - dmg);
 
         if (this.ondamage) { this.ondamage(this,dmg,damager); }
-        if (this.health <= 0) { if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); } this.died(); }
+        if (this.health <= 0) { if (this.score) {
+            if (this.deathEffect) { await this.deathEffect(this); }
+            AddScore(this.score,this.pos.x,this.pos.y); }
+            this.died();
+        }
     }
     
     destroy() {
