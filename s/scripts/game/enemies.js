@@ -473,7 +473,7 @@ const startFromWave = wave => {
 }
 export const Load = async () => {
     LoadEnemies();
-    //startFromWave(9);
+    startFromWave(7);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {
