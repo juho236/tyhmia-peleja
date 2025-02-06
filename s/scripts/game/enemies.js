@@ -313,6 +313,7 @@ const LoadEnemies = () => {
             dmg: 8,
             score: 3,
             oob: true,
+            spawns: {count: 3, id: "tinymeteor"},
             ai: (e,dt) => {
                 if (e.removetimer) {
                     e.removetimer -= dt;
@@ -460,14 +461,19 @@ const startFromWave = wave => {
             if (!enemy) { return; }
 
             s += enemy.score * p.count;
+            if (enemy.spawns) {
+                let e = enemies[enemy.spawns.id];
+                if (!e) { return; }
+                s += e.score * enemy.spawns.count * p.count;
+            }
         });
     }
 
-    //SetScore(s);
+    SetScore(s);
 }
 export const Load = async () => {
     LoadEnemies();
-    startFromWave(9);
+    //startFromWave(9);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

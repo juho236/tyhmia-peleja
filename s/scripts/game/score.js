@@ -48,8 +48,10 @@ class Path {
 }
 
 let xpmultiplier = 1;
+let maxpaths = 2;
 export const SetScoreDifficulty = diff => {
     if (diff.xpmultiplier) { xpmultiplier += diff.xpmultiplier; }
+    if (diff.maxpaths) { maxpaths = diff.maxpaths; }
 }
 const shop = {
     dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.","Damage",() => { AddPower("dmg",2); }),
@@ -154,7 +156,7 @@ const promptPurchase = async completed => {
         table.iterate(array, item => {
             if (!item) { return; }
             let p = unlockedPathes[item.path];
-            if (p && p >= 2) { return; }
+            if (p && p >= maxpaths) { return; }
 
             c ++;
             table.insert(opts,item);
@@ -303,8 +305,9 @@ export const SetPlayer = plr => {
 }
 
 export const SetScore = sc => {
-    savedScore = sc;
-    score = sc;
+    savedScore = sc * xpmultiplier;
+    score = savedScore;
+    console.log(score);
 }
 export const AddScore = (sc,x,y) => {
     sc *= xpmultiplier;
