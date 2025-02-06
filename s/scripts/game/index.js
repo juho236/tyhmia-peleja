@@ -6,11 +6,11 @@ import { Load as LoadDifficulty } from "./difficulty.js";
 
 export const Load = async () => {
     await LoadBackground();
-    await LoadEnemies();
     await LoadScore();
 
     new Promise(async completed => {
         await LoadDifficulty(async () => {
+            await LoadEnemies();
             await LoadPlayer();
             completed();
         });
