@@ -48,10 +48,13 @@ class Path {
 }
 
 let xpmultiplier = 1;
+export const SetScoreDifficulty = diff => {
+    if (diff.xpmultiplier) { xpmultiplier += diff.xpmultiplier; }
+}
 const shop = {
     dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.","Damage",() => { AddPower("dmg",2); }),
     dmgbasic0: new Upgrade("+3 damage","Your ship's lasers\nwill deal an\nadditional\n3 damage.","Damage basic",() => { AddPower("dmg",3); }),
-    dmgpierce0: new Upgrade("+2 pierce","Empowers\nthe lasers\nto pierce through\n2 additional\ntargets.","Damage pierce",() => { AddPower("dmg",3); }),
+    dmgpierce0: new Upgrade("+2 pierce","Empowers\nthe lasers\nto pierce through\n2 additional\ntargets.","Damage pierce",() => { AddPower("pierce",2); }),
     dmgspeed0: new Upgrade("+2 speed","Overclocks\nthe laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.","Damage speed",() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
 
     defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
@@ -304,14 +307,15 @@ export const SetScore = sc => {
     score = sc;
 }
 export const AddScore = (sc,x,y) => {
-    score += sc * xpmultiplier;
+    sc *= xpmultiplier;
+    score += sc;
     
     let big = Math.floor(sc / 10);
-    sc -= big * 4;
+    sc -= big * 8;
     let medium = Math.floor(sc / 8);
-    sc -= medium * 2;
+    sc -= medium * 6;
     let small = Math.floor(sc / 3);
-    sc -= small;
+    sc -= small / 2;
     let tiny = sc;
 
     spawnBig(big,x,y);

@@ -4,14 +4,15 @@ import { table } from "../lib/table.js";
 import { Layers } from "../renderer/render.js";
 import { SetEnemyDifficulty } from "./enemies.js";
 import { SetPlayerDifficulty } from "./player.js";
+import { SetScoreDifficulty } from "./score.js";
 
 const options = [
     {display: "Easy"},
-    {display: "Medium", healthmultiplier: 1.2, damagemultiplier: 2, hardattacks: true},
-    {display: "Hard"}
+    {display: "Medium", healthmultiplier: 1.25, damagemultiplier: 2, hardattacks: true, xpmultiplier: 0.5},
+    {display: "Hard", healthmultiplier: 1.333, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, xpmultiplier: 1}
 ]
 let ui;
-export const Load = async () => {
+export const Load = async completed => {
     ui = new UILayer(Layers.popup);
 
     new Promise(completed => {
@@ -59,11 +60,14 @@ export const Load = async () => {
         }
         ui.redraw();
         Pause();
-    }).then(d => {
+    }).then(async d => {
         ui.children = {};
         ui.redraw();
-        SetPlayerDifficulty(d);
+
         SetEnemyDifficulty(d);
+        await completed();
+        SetPlayerDifficulty(d);
+        SetScoreDifficulty(d);
 
         Resume();
     });
