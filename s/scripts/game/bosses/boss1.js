@@ -2,11 +2,17 @@ import { LaserProjectile, laserParticleEmitter, transform, v2 } from "../../lib/
 import { weightCheck } from "../../lib/random.js";
 import { Layers, Shake, height, width } from "../../renderer/render.js";
 
+let hardattacks;
+let impossibleattacks;
+
 let player;
 let attacks = {
-    ram: {weight: 9999, ai: (e) => {
+    ram: {weight: 1, ai: (e) => {
         e.timer = 1;
+        if (hardattacks) { e.timer -= 0.2; }
+        if (impossibleattacks) { e.timer -= 0.2; }
         e.chargespeed = 450 + Math.random() * 85;
+        if (hardattacks) { e.chargespeed -= 40 + Math.random() * 54; }
         
         let t = player.pos.sub(e.pos).magnitude() / e.chargespeed;
         t += Math.sqrt(t) / 3;
@@ -14,21 +20,29 @@ let attacks = {
         e.phase = chargeback;
         e.turnspeed = 10;
         e.velocity = new v2(0,0);
-    }}, chase: {weight: 1, ai: e => {
+    }}, chase: {weight: 100, ai: e => {
         e.turnspeed = 2;
         e.timer = 10 + Math.random() * 10;
         e.phase = chase;
     }}, center: {weight: 1, ai: e => {
         e.timer = 1;
-
-
         e.rotspeed = 1;
+        if (hardattacks) {
+            e.rotspeed = 3;
+        }
+        if (impossibleattacks) {
+            e.rotspeed += 2;
+        }
+
         e.spos = e.pos;
         e.phase = gotocenter;
     }},
 };
+
 export const boss1 = {
-    load: (e,plr,laserTextures,lasertextures) => {
+    load: (e,plr,laserTextures,lasertextures,hardmode,impossiblemode) => {
+        hardattacks = hardmode;
+        impossibleattacks = impossiblemode;
         e.timer = 1;
         e.weight = 5;
         e.phase = start;
@@ -160,8 +174,23 @@ const turnTo = (e,p) => {
 }
 
 const chase = (e,dt) => {
-    let t = player.pos.sub(e.pos).magnitude() / e.velocity.magnitude();
-    t -= Math.sqrt(t) / 3;
+    let t;
+    let s = 350;
+    let d = 0.5;
+
+    e.dmg = 15;
+    let epos = e.pos;
+    if (hardattacks) {
+        s += 70; d += 0.3;
+        e.dmg += 3;
+        
+        t = player.pos.sub(e.pos).magnitude() / (e.velocity.magnitude() + s);
+    } else {
+        t = player.pos.sub(e.pos).magnitude() / e.velocity.magnitude();
+    }
+    if (hardattacks) {
+        epos = epos.sub(e.velocity.unit().multiply(t));
+    }
 
     let tpos = player.pos.add(player.velocity.multiply(t));
     turnTo(e,player.pos);
@@ -169,12 +198,11 @@ const chase = (e,dt) => {
     //e.shootspeed += dt;
     //if (e.shootspeed > 0) { e.shootspeed -= 1; shoot(e); }
     e.timer -= dt;
-    if (e.timer > 0) {
-        e.velocity = e.velocity.add(tpos.sub(e.pos).unit().multiply(dt * 350));
-        e.velocity = e.velocity.sub(e.velocity.multiply(dt / 2));
-        e.dmg = Math.max(5,e.velocity.magnitude() / 40);
-        return;
-    }
+
+    
+    e.velocity = e.velocity.add(tpos.sub(epos).unit().multiply(dt * s));
+    e.velocity = e.velocity.sub(e.velocity.multiply(dt * d));
+    if (e.timer > 0) { return; }
     e.dmg = 1;
     e.phase = think;
 }
@@ -190,6 +218,8 @@ const chargeback = (e,dt) => {
     e.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(e.chargespeed);
     e.phase = charging;
     e.timer = 0.5;
+    if (hardattacks) { e.timer += 0.2; }
+    if (impossibleattacks) { e.timer += 0.1;}
 }
 const charging = (e,dt) => {
     e.timer -= dt;
@@ -205,6 +235,7 @@ const gotocenter = (e,dt) => {
     e.pos = e.spos.lerp(new v2(width/2,height/2),Math.min(1,1 - e.timer) ** 2);
     if (e.timer > 0) { return; }
     e.timer = 8 + Math.random() * 8;
+    if (impossibleattacks) { e.timer += 4 + Math.random() * 9; }
     e.phase = center;
 }
 const center = (e,dt) => {
@@ -213,7 +244,11 @@ const center = (e,dt) => {
     e.rot = e.trot;
     e.pos = new v2(width/2,height/2);
     e.velocity = new v2(0,0);
-    e.shootspeed += dt * 10;
+
+    let s = 10;
+    if (hardattacks) { s -= 3; }
+    if (impossibleattacks) { s += 2;}
+    e.shootspeed += dt * s;
     if (e.shootspeed > 0) { e.shootspeed -= 1; shoot(e); }
 
     e.timer -= dt;

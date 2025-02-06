@@ -8,7 +8,11 @@ export const Load = async () => {
     await LoadBackground();
     await LoadEnemies();
     await LoadScore();
-    await LoadPlayer();
 
-    await LoadDifficulty();
+    new Promise(async completed => {
+        await LoadDifficulty(async () => {
+            await LoadPlayer();
+            completed();
+        });
+    });
 }

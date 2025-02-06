@@ -76,6 +76,8 @@ const parts = {
 
 let enemyCount = 0;
 let enemies;
+let hardattacks;
+let impossibleattacks;
 
 const LoadEnemies = () => {
     enemies = {
@@ -128,7 +130,7 @@ const LoadEnemies = () => {
             load: e => {
                 e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
                 e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-                boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures);
+                boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures,hardattacks,impossibleattacks);
             },
             ai: (e, dt) => {
                 if (e.removetimer) {
@@ -165,6 +167,7 @@ const LoadEnemies = () => {
                 e.velocity = player.pos.sub(e.pos).unit().multiply(40);
                 e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
                 e.hit = e1 => {
+                    if (impossibleattacks && !e1.isPlayer) { return; }
                     if (e1.isProjectile) { return; }
                     e.damage(999,e1);
                 }
@@ -229,6 +232,7 @@ const LoadEnemies = () => {
             load: e => {
                 e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
                 e.hit = e1 => {
+                    if (impossibleattacks && !e1.isPlayer) { return; }
                     if (e1.isProjectile) { return; }
                     e.damage(999,e1);
                 }
@@ -262,6 +266,21 @@ const LoadEnemies = () => {
                     return;
                 }
                 e.trot = ClampAngle(e.trot + dt * 3);
+                if (hardattacks) {
+                    if (impossibleattacks) {
+                        let d = player.pos.sub(e.pos);
+                        let m = e.velocity.magnitude();
+                        let t = Math.min(1,d.magnitude() / m);
+                        if (m == 0) { t = 0; }
+                        e.velocity = e.velocity.add(player.pos.add(player.velocity.multiply(t)).sub(e.pos).unit().multiply(dt * 40));
+                        e.velocity = e.velocity.sub(e.velocity.multiply(dt / 4));
+                    }
+                    let s = 40;
+                    e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * s));
+                    e.velocity = e.velocity.sub(e.velocity.multiply(dt / 4));
+
+                    return;
+                }
                 
                 if (e.outside) { e.destroy(); }
             },
@@ -303,6 +322,15 @@ const LoadEnemies = () => {
                     return;
                 }
                 e.trot = ClampAngle(e.trot + dt);
+                if (hardattacks) {
+                    let d = player.pos.sub(e.pos);
+                    let m = e.velocity.magnitude();
+                    let t = Math.min(1,d.magnitude() / m);
+                    if (m == 0) { t = 0; }
+                    e.velocity = e.velocity.add(player.pos.add(player.velocity.multiply(t)).sub(e.pos).unit().multiply(dt * 65));
+                    e.velocity = e.velocity.sub(e.velocity.multiply(dt));
+                    return;
+                }
                 const u = player.pos.sub(e.pos).unit();
                 e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 50));
                 e.velocity = e.velocity.sub(e.velocity.multiply(dt));
@@ -343,8 +371,11 @@ const LoadEnemies = () => {
 
 let enemylist = [];
 
+let hpmultiplier;
 export const SetEnemyDifficulty = diff => {
-
+    hpmultiplier = diff.healthmultiplier;
+    hardattacks = diff.hardattacks;
+    impossibleattacks = diff.impossibleattacks;
 }
 const spawnEnemy = id => {
     enemyCount += 1;
@@ -354,6 +385,7 @@ const spawnEnemy = id => {
     let e = new entity("Enemy",enemy.size,enemy.hitbox,Layers.Enemies,enemy.textures);
     e.group = "Enemy";
     e.health = enemy.health;
+    if (hpmultiplier) { e.health *= hpmultiplier; }
     e.texture = enemy.textures.default;
     e.dmg = enemy.dmg;
     e.score = enemy.score;
