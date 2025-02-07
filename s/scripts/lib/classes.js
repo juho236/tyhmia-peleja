@@ -353,7 +353,7 @@ export class entity {
         this.idamage = dmg;
         if (this.damagemultiplier) { dmg *= this.damagemultiplier; }
 
-        if (this.toughness) { dmg = Math.max(1,dmg - Math.min(this.maxhealth * 0.8,dmg * Math.min(dmg - 5,40) * this.toughness / 100)); }
+        if (this.toughness) { dmg = Math.max(1,dmg - Math.min(this.maxhealth * 0.8,dmg * Math.min(dmg - 5,40) * this.toughness / 180)); }
         if (this.defense) { dmg = Math.max(1,dmg - this.defense); }
 
         this.health = Math.max(0,this.health - dmg);
@@ -437,8 +437,8 @@ const collision = (entity1, entity2, dt) => {
     }
     
 
-    if (entity1.hit) { entity1.hit(entity2); }
-    if (entity2.hit) { entity2.hit(entity1); }
+    //if (entity1.hit) { entity1.hit(entity2); }
+    //if (entity2.hit) { entity2.hit(entity1); }
 
     if (entity1.group == entity2.group) {return; }
     if (table.find(entity1.activecollisions,entity2)) { return; }
@@ -572,8 +572,9 @@ export class ExplosionProjectile extends projectile {
     constructor(name,group,pos,velocity,size,hitbox,layer,textures) {
         super(name,group,pos,velocity,size,hitbox,layer,textures);
 
-        this.lifetime = 0.5;
+        this.lifetime = 0.1;
         this.pierce = Infinity;
+        this.unmovable = true;
         this.weight = 5;
         this.dmg = 50;
         this.nosamegroup = true;
@@ -583,6 +584,6 @@ export class ExplosionProjectile extends projectile {
     }
 
     hit(target) {
-
+        target.velocity = target.velocity.add(target.pos.sub(this.pos).unit().multiply(400 / (target.weight || 1)));
     }
 }

@@ -7,12 +7,12 @@ import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 import { LoadWave, SetPlayer } from "./enemies.js";
 import { SetPlayer as SetPlayer2 } from "./score.js";
-import { UILayer, Frame, Scale2, Anchor, Color } from "../engine/ui.js";
+import { UILayer, Frame, Text, Scale2, Anchor, Color } from "../engine/ui.js";
 import { LoadScore } from "./score.js";
 
 let power = {
     maxhealth: 75,
-    pierce: 2,
+    pierce: 4,
     dmg: 6,
     defense: 0,
     toughness: 0,
@@ -35,6 +35,10 @@ export const SetPlayerDifficulty = diff => {
     power.damagemultiplier = diff.damagemultiplier;
     playerEntity.damagemultiplier = diff.damagemultiplier;
 }
+let addxp;
+export const AddXP = (xp,max,levels) => {
+    addxp(xp,max,levels);
+}
 
 export const Load = async () => {
     SetSpeed(0);
@@ -44,6 +48,7 @@ export const Load = async () => {
         }
     ),16,16));
     playerEntity.group = "player";
+    playerEntity.dmg = 40;
     playerEntity.damagemultiplier = power.damagemultiplier;
     playerEntity.texture = playerEntity.textures.default;
     playerEntity.inv = 2;
@@ -108,11 +113,13 @@ export const Load = async () => {
     BindToKeyDown("s",() => { playerEntity.down = true; });
     BindToKeyUp("s",() => { playerEntity.down = false; });
 
-    BindToKeyUp("r",() => { if (playerEntity.deathtimer && playerEntity.deathtimer <= 0) { playerEntity.destroy(); } })
+    BindToKeyUp("r",() => { if (playerEntity.deathtimer && playerEntity.deathtimer <= 0) { remove(); } })
 
-
+    const remove = () => {
+        CancelFrame(async () => { playerEntity.destroy(); await Load(); });
+    }
     playerEntity.event = AddTick(dt => {
-        if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; if (playerEntity.deathtimer <= -2) { playerEntity.destroy(); return -1; }}
+        if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; if (playerEntity.deathtimer <= -2) { remove(); return -1; }}
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
         SetSpeed(playerEntity.speed);
 
@@ -147,20 +154,25 @@ export const Load = async () => {
     hud.children = {
         healthbar: new Frame({size: new Scale2(0,64,0,16), pos: new Scale2(1,0,1,0), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
             inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(255,0,0,0)},{
-                bar: new Frame({size: new Scale2(1,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(0,255,0,0)})
+                bar: new Frame({size: new Scale2(1,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(0,255,0,0)}),
+                counter: new Text({anchor: new Anchor(.5,.5), pos: new Scale2(.5,0,0,1), color: new Color(0,0,0,0), textsize: 10, text: "75/75"})
             })
         }),
+        xpbar: new Frame({size: new Scale2(0,48,0,4), pos: new Scale2(1,0,1,-16), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
+            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(0,0,0,0)},{
+                bar: new Frame({size: new Scale2(0,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(64,0,128,0)}),
+                levels: new Text({anchor: new Anchor(.65,1), size: new Scale2(1,0,0,8), pos: new Scale2(0,0,1,0), textsize: 10, text: "0"})
+            })
+        })
         //death: new Frame({size: new Scale2(0,128,)})
     }
     hud.redraw();
     let healthbar = hud.children.healthbar.children.inset.children.bar;
+    let hptext = hud.children.healthbar.children.inset.children.counter;
+    let xpbar = hud.children.xpbar.children.inset.children.bar;
+    let leveltext = hud.children.xpbar.children.inset.children.levels;
     let death = hud.children.death;
 
-
-    playerEntity.removing = () => {
-        CancelFrame();
-        Load();
-    }
     playerEntity.died = () => {
         playerEntity.invisible = true;
         playerEntity.inactive = true;
@@ -181,11 +193,18 @@ export const Load = async () => {
 
     playerEntity.ondamage = (p,dmg,dmgr) => {
         healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
+        hptext.text = Math.ceil(playerEntity.health * 10) / 10 + "/" + playerEntity.maxhealth;
         Shake(dmg / 2,0.5);
         hud.redraw();
 
         if (!dmgr) { return; }
         playerEntity.velocity = playerEntity.velocity.add(dmgr.velocity.multiply((dmgr.weight || 1) / playerEntity.weight));
+    }
+    playerEntity.ondamage(playerEntity,0,playerEntity);
+    addxp = (xp,max,levels) => {
+        xpbar.size = new Scale2(xp / max,0,1,0);
+        leveltext.text = levels.toString();
+        hud.redraw();
     }
 
     SetPlayer(playerEntity);
