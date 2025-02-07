@@ -20,6 +20,7 @@ export const AddMouseEvent = event => {
     table.insert(mouseEvents,event);
 }
 export const Load = (canvas, draw) => {
+    draw.imageSmoothingEnabled = false;
     setRenderer(dt => {main(canvas,draw);});
 
     canvas.onmousemove = event => {

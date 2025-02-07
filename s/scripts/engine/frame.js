@@ -74,12 +74,14 @@ export const Resume = () => {
 }
 
 let framecancel = false;
-export const CancelFrame = () => {
-    framecancel = true;
+export const CancelFrame = (c) => {
+    framecancel = c;
 }
 
-const frame = () => {
+const frame = async () => {
     if (!run) { return; }
+
+    if (framecancel) { await framecancel(); framecancel = false; window.requestAnimationFrame(frame); return; }
 
     const t = time();
     const dt = Math.min(0.05,t - lastTime);
@@ -98,7 +100,7 @@ const frame = () => {
         ClearLayer(Layers.Player);
         ClearLayer(Layers.XP);
 
-        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); if (framecancel) { framecancel = false; return -1; } });
+        table.iterate(callbacks,callback => { if (!callback) { return; } callback(1 / frameRate * fspeed); });
         table.iterate(independent,callback => { if (!callback) { return; } callback(1 / frameRate); });
 
         try {

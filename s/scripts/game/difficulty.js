@@ -9,7 +9,7 @@ import { SetScoreDifficulty } from "./score.js";
 const options = [
     {display: "Easy"},
     {display: "Medium", healthmultiplier: 1.25, damagemultiplier: 2, hardattacks: true, xpmultiplier: 0.5},
-    {display: "Hard", healthmultiplier: 1.333, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, xpmultiplier: 1, maxpaths: 3}
+    {display: "Hard", healthmultiplier: 1.333, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, xpmultiplier: 1}
 ]
 let ui;
 export const Load = async completed => {

@@ -38,7 +38,7 @@ let waves = [
         {id: "enemy",enemy: "missile",count: 5,time: 3},
     ]},
     {pattern: [
-        {id: "enemy",enemy: "smallmeteor",count: 100,time: 0.25, parallel: true},
+        {id: "enemy",enemy: "smallmeteor",count: 100,time: 0.5, parallel: true},
         {id: "enemy",enemy: "missile",count: 9,time: 5}
     ]},
     {pattern: [
@@ -163,7 +163,7 @@ const LoadEnemies = () => {
             oob: true,
             load: e => {
                 e.lock = 7;
-                e.weight = 50;
+                e.weight = 25;
                 e.velocity = player.pos.sub(e.pos).unit().multiply(40);
                 e.explosion = new fireParticleEmitter("Explode",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
                 e.hit = e1 => {
@@ -180,9 +180,11 @@ const LoadEnemies = () => {
                     e.destroy();
                     return;
                 }
+                if (e.detonate) { e.detonate -= dt; if (e.detonate <= 0) { e.damage(999,e); return; } }
                 e.lock -= dt;
                 if (e.lock > 0) { return; }
                 
+                e.detonate = 3;
                 e.hitbox = 24;
     
                 e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
@@ -473,7 +475,7 @@ const startFromWave = wave => {
 }
 export const Load = async () => {
     LoadEnemies();
-    //startFromWave(9);
+    //startFromWave(7);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

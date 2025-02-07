@@ -4,7 +4,7 @@ import { AmbientEntity, v2 } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers } from "../renderer/render.js";
-import { AddPower } from "./player.js";
+import { AddPower, AddXP } from "./player.js";
 
 
 class Upgrade {
@@ -62,7 +62,8 @@ const shop = {
     defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensebasic0: new Upgrade("+3 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.","Defense basic",() => { player.defense += 3; AddPower("defense",3); }),
     defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.","Defense health",() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
-    defensetoughness0: new Upgrade("+1\ntoughness","Adds tough plating\nto your ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
+    defensetoughness0: new Upgrade("+1\ntoughness","Adds tough\nplating to\nyour ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
+    defensetoughness1: new Upgrade("+2\ntoughness","Even tougher\nplating.","Defense toughness",() => { player.toughness += 2; AddPower("toughness",2); }),
 
     utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; }),
     utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.","Utility basic", () => { xpmultiplier += 0.5; }),
@@ -78,7 +79,9 @@ const mainpathes = [
     new Path("Defensepath","P0",shop.defenseroot,[
         new Path("DefenseBasic","P0-1",shop.defensebasic0,[]),
         new Path("DefenseHealth","P0-1",shop.defensehealth0,[]),
-        new Path("DefenseToughness","P0-1",shop.defensetoughness0,[]),
+        new Path("DefenseToughness","P0-1",shop.defensetoughness0,[
+            new Path("DefenseToughness1","P0-1.2",shop.defensetoughness1,[])
+        ]),
     ],true),
     new Path("Utilitypath","P0",shop.utilityroot,[
         new Path("UtilityBasic","P0-2",shop.utilitybasic0,[]),
@@ -167,10 +170,30 @@ const promptPurchase = async completed => {
         greatest = Math.max(greatest,priority);
         least = Math.min(priority,least);
     });
-    console.log(opt);
     options[0] = weightCheck(opt[greatest]);
     options[1] = weightCheck(opt[greatest]);
     options[2] = weightCheck(opt[least]);
+
+    if (opt[greatest]) {
+        let c = 0;
+        table.iterate(opt[greatest],opt => {
+            if (!opt) { return; }
+            c ++;
+        });
+        if (c == 1) {
+            let i = -1;
+            table.pairs(opt,I => {
+                I = Number(I);
+                if (I >= greatest) { return; }
+
+                i = Math.max(i,I);
+            })
+            if (i > -1) {
+                options[0] = weightCheck(opt[greatest]);
+                options[1] = weightCheck(opt[i]);
+            }
+        }
+    }
     if (options[2]) { options[2].weight = 0; }
     
     let w = 2;
@@ -304,14 +327,36 @@ export const SetPlayer = plr => {
     player = plr;
 }
 
+let totalxp = 0;
+let savedtotalxp = 0;
 export const SetScore = sc => {
     savedScore = sc * xpmultiplier;
     score = savedScore;
+    totalxp = savedScore;
     console.log(score);
+}
+
+const updatexp = () => {
+    let xp = score;
+    let t = 0;
+    let lvl = level;
+    let l = 0;
+    while (true) {
+        t = 75 + lvl * 120;
+        if (xp < t) { break; }
+
+        xp -= t;
+        l ++;
+        lvl ++;
+    }
+    AddXP(xp,t,l);
 }
 export const AddScore = (sc,x,y) => {
     sc *= xpmultiplier;
     score += sc;
+    totalxp += sc;
+
+    updatexp();
     
     let big = Math.floor(sc / 10);
     sc -= big * 8;
@@ -331,6 +376,7 @@ export const GetScore = () => {
 }
 export const SaveScore = async () => {
     savedScore = score;
+    savedtotalxp = totalxp;
     let levels = false;
     while (true) {
         let levelTreshold = 75 + level * 120;
@@ -354,10 +400,13 @@ export const SaveScore = async () => {
         ui.redraw();
         Resume();
     }
+    
     score = savedScore;
+    updatexp();
 }
 export const LoadScore = () => {
     score = savedScore;
+    totalxp = savedtotalxp;
 }
 export const Load = async () => {
     xptextures4 = await TextureBuffers(await LoadTextures({
