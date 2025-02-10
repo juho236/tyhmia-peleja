@@ -3,10 +3,11 @@ import { ClampAngle, v2, ExplosionProjectile, dustParticleEmitter, entity, fireP
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
-import { boss1 } from "./bosses/boss1.js";
+import { boss1 } from "./enemies/boss1.js";
+import { lasership } from "./enemies/lasership.js";
 import { SaveScore, SetScore } from "./score.js";
 
-let waveIndex = 0;
+let waveIndex = 10;
 
 let waves = [
     {pattern: [
@@ -47,7 +48,13 @@ let waves = [
     ]},
     {pattern: [
         {id: "enemy",enemy: "boss1",count: 1,time: 0}
-    ]}
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "lasership",count: 2,time: 20},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "lasership",count: 5,time: 1.6},
+    ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -115,6 +122,43 @@ const LoadEnemies = () => {
             textures: {dust0: "assets/trail-smoke0.png", dust1: "assets/trail-smoke1.png"},
             width: 5,
             height: 5,
+        },
+        lasership: {
+            textures: {
+                default: "assets/ship-forward.png",
+            },
+            width: 16,
+            height: 16,
+            size: new v2(16,16),
+            hitbox: new v2(8,8),
+            score: 55,
+            health: 150,
+            oob: true,
+            load: e => {
+                e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+                lasership.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures,hardattacks,impossibleattacks);
+            },
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                lasership.ai(e,dt);
+            },
+            died: e => {
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 5;
+
+                for (let i=0;i<8;i++) { e.fire.emit(); }
+                for (let i=0;i<32;i++) { e.dust.emit(); }
+                
+                Shake(2,0.5);
+            }
         },
         boss1: {
             textures: {
@@ -395,7 +439,7 @@ const spawnEnemy = id => {
     e.oob = enemy.oob;
     e.pos = new v2(Math.random() * width, -20);
 
-    if (enemy.load) { enemy.load(e); }
+    if (enemy.load) { try { enemy.load(e); } catch (err) { console.error(err); return; }}
     e.died = () => { enemy.died(e); }
     e.ondamage = enemy.ondamage;
     e.event = Add(dt => {
@@ -471,11 +515,11 @@ const startFromWave = wave => {
         });
     }
 
-    SetScore(s);
+    //SetScore(s);
 }
 export const Load = async () => {
     LoadEnemies();
-    //startFromWave(7);
+    startFromWave(11);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

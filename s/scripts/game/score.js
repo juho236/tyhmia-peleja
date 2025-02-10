@@ -1,5 +1,5 @@
 import { Add, AddIndependent, Pause, Remove, RemoveIndependent, Resume } from "../engine/frame.js";
-import { Anchor, Color, Frame, Scale2, Text, UILayer } from "../engine/ui.js";
+import { Anchor, Color, Frame, Image, Scale2, Text, UILayer } from "../engine/ui.js";
 import { AmbientEntity, v2 } from "../lib/classes.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
@@ -8,11 +8,87 @@ import { AddPower, AddXP } from "./player.js";
 
 
 class Upgrade {
-    constructor(display,desc,path,callback) {
+    constructor(display,desc,slots,callback) {
         this.display = display;
         this.desc = desc;
-        this.path = path;
+        this.slots = slots;
         this.callback = callback;
+    }
+}
+const slotpathes = {
+    damage: {
+        basic: {
+            slot: "damage"
+        },
+        pierce: {
+            slot: "utility"
+        },
+        speed: {
+            slot: "defense",
+        },
+        slot: "damage"
+    },
+    defense: {
+        basic: {
+            slot: "defense"
+        },
+        health: {
+            slot: "damage",
+        },
+        toughness: {
+            basic: {
+                slot: "defense",
+            },
+            slot: "utility",
+        },
+        slot: "defense"
+    },
+    utility: {
+        basic: {
+            slot: "utility",
+        },
+        laser: {
+            slot: "damage",
+        },
+        speed: {
+            slot: "defense",
+        },
+        slot: "utility"
+    }
+}
+
+const loopSlots = (path,index) => {
+    Object.entries(path).map(v => {
+        const i = v[0];
+        const obj = v[1];
+
+        if (typeof obj != "object") { return; }
+
+        loopSlots(obj,index + 1,path);
+        obj.parent = path;
+    })
+}
+loopSlots(slotpathes,0);
+const findslots = (path,index,callback) => {
+    callback(path,index);
+    if (!path.parent) { return; }
+    
+    findslots(path.parent,index + 1,callback);
+}
+class Slots {
+    constructor(path) {
+        let ls = [];
+
+        findslots(path,0,(path,index) => {
+            ls[index] = path.slot;
+        });
+
+        let l = ls.length;
+        this.slot0 = ls[l - 2] || "empty";
+        this.slot1 = ls[l - 3] || "empty";
+        this.slot2 = ls[l - 4] || "empty";
+        this.slot3 = ls[l - 5] || "empty";
+        this.slot4 = ls[l - 6] || "empty";
     }
 }
 
@@ -54,21 +130,21 @@ export const SetScoreDifficulty = diff => {
     if (diff.maxpaths) { maxpaths = diff.maxpaths; }
 }
 const shop = {
-    dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.","Damage",() => { AddPower("dmg",2); }),
-    dmgbasic0: new Upgrade("+3 damage","Your ship's lasers\nwill deal an\nadditional\n3 damage.","Damage basic",() => { AddPower("dmg",3); }),
-    dmgpierce0: new Upgrade("+2 pierce","Empowers\nthe lasers\nto pierce through\n2 additional\ntargets.","Damage pierce",() => { AddPower("pierce",2); }),
-    dmgspeed0: new Upgrade("+2 speed","Overclocks\nthe laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.","Damage speed",() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
+    dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.",new Slots(slotpathes.damage),() => { AddPower("dmg",2); }),
+    dmgbasic0: new Upgrade("+3 damage","Your ship's lasers\nwill deal an\nadditional\n3 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",3); }),
+    dmgpierce0: new Upgrade("+3 pierce","Empowers\nthe lasers\nto pierce through\n3 additional\ntargets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
+    dmgspeed0: new Upgrade("+2 speed","Overclocks\nthe laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
 
-    defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.","Defense",() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
-    defensebasic0: new Upgrade("+3 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.","Defense basic",() => { player.defense += 3; AddPower("defense",3); }),
-    defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.","Defense health",() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
-    defensetoughness0: new Upgrade("+1\ntoughness","Adds tough\nplating to\nyour ship\nto weaken\nstrong hits.","Defense tougness",() => { player.toughness += 1; AddPower("toughness",1); }),
-    defensetoughness1: new Upgrade("+2\ntoughness","Even tougher\nplating.","Defense toughness",() => { player.toughness += 2; AddPower("toughness",2); }),
+    defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defensebasic0: new Upgrade("+3 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.",new Slots(slotpathes.defense.basic),() => { player.defense += 3; AddPower("defense",3); }),
+    defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
+    defensetoughness0: new Upgrade("+1\ntoughness","Adds tough\nplating to\nyour ship\nto weaken\nstrong hits.",new Slots(slotpathes.defense.toughness),() => { player.toughness += 1; AddPower("toughness",1); }),
+    defensetoughness1: new Upgrade("+2\ntoughness","Even tougher\nplating.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 2; AddPower("toughness",2); }),
 
-    utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.","Utility",() => { xpmultiplier += 0.25; }),
-    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.","Utility basic", () => { xpmultiplier += 0.5; }),
-    utilitylaser0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.","Utility lasers",() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
-    utilityspeed0: new Upgrade("100%\nacceleration","Your ship\nwill accelerate\ntwice as fast.","Utility speed",() => { player.acceleration += 5; AddPower("acceleration",5); }),
+    utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
+    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
+    utilitylaser0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
+    utilityspeed0: new Upgrade("100%\nacceleration","Your ship\nwill accelerate\ntwice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
 }
 const mainpathes = [
     new Path("Damagepath","P0",shop.dmgroot,[
@@ -91,6 +167,7 @@ const mainpathes = [
 ];
 
 let ui;
+let slotTextures;
 
 const tsize = async (bg, target) => {
     let initial = bg.size;
@@ -220,6 +297,11 @@ const promptPurchase = async completed => {
             let upg = option.upgrade;
             option.weight = Math.max(option.weight,0);
 
+            let slots = {};
+            for (let i=0; i<5; i++) {
+                let s = "slot"+i;
+                slots[s] = new Image({size: new Scale2(0,6,0,6),pos: new Scale2(0,2 + i * 8,1,-2), anchor: new Anchor(0,1), image: slotTextures[upg.slots[s]]});
+            }
             let f;
             f = new Frame(
                 {
@@ -247,7 +329,8 @@ const promptPurchase = async completed => {
                     }
                 },{
                     title: new Text({text: upg.display, size: new Scale2(1,0,.3,0), textsize: 14}),
-                    desc: new Text({text: upg.desc, textsize: 10, size: new Scale2(1,0,.3,0), pos: new Scale2(0,0,.25,0)})
+                    desc: new Text({text: upg.desc, textsize: 10, size: new Scale2(1,0,.3,0), pos: new Scale2(0,0,.25,0)}),
+                    ...slots
                 }
             );
             
@@ -417,6 +500,13 @@ export const Load = async () => {
     xptextures6 = await TextureBuffers(await LoadTextures({
         medium: "assets/xpmedium.png",
         big: "assets/xpbig.png"
+    }),6,6);
+
+    slotTextures = await TextureBuffers(await LoadTextures({
+        empty: "assets/slot-empty.png",
+        damage: "assets/slot-attack.png",
+        defense: "assets/slot-defense.png",
+        utility: "assets/slot-utility.png"
     }),6,6);
 
     ui = new UILayer(Layers.shop);

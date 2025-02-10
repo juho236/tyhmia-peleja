@@ -170,6 +170,18 @@ export class Text extends UIObject {
         });
     }
 }
+export class Image extends UIObject {
+    constructor(obj) {
+        super(obj.pos, obj.size, obj.anchor);
+        this.image = obj.image;
+    }
+
+    render(x,y,width,height) {
+        let ctx = this.buffer.Draw;
+    
+        ctx.drawImage(this.image.Buffer,x,y,width,height);
+    }
+}
 
 let obj;
 const recurse = (c,x,y) => {
