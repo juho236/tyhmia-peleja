@@ -53,7 +53,8 @@ let waves = [
         {id: "enemy",enemy: "lasership",count: 2,time: 20},
     ]},
     {pattern: [
-        {id: "enemy",enemy: "lasership",count: 5,time: 1.6},
+        {id: "enemy",enemy: "lasership",count: 3,time: 30,parallel: true},
+        {id: "enemy",enemy: "mine",count: 18,time: 5}
     ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -515,7 +516,7 @@ const startFromWave = wave => {
         });
     }
 
-    //SetScore(s);
+    SetScore(s);
 }
 export const Load = async () => {
     LoadEnemies();
