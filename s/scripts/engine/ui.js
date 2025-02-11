@@ -162,7 +162,20 @@ export class Text extends UIObject {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = this.font;
-        let lines = this.text.split("\n");
+
+        let currentline = "";
+        let lines = [];
+        this.text.split(" ").map(word => {
+            let newline = currentline + " " + word;
+            let w = ctx.measureText(newline).width;
+            if (w >= width) {
+                table.insert(lines,currentline);
+                currentline = word;
+                return;
+            }
+            currentline = newline;
+        });
+        table.insert(lines,currentline);
         let lineheight = this.textsize;
 
         table.iterate(lines,(line, index) => {

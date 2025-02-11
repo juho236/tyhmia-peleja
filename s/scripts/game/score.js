@@ -19,6 +19,15 @@ const slotpathes = {
     damage: {
         basic: {
             basic: {
+                basic: {
+                    slot: "damage"
+                },
+                power: {
+                    slot: "utility"
+                },
+                super: {
+                    slot: "defense"
+                },
                 slot: "damage"
             },
             slot: "damage"
@@ -31,36 +40,60 @@ const slotpathes = {
         },
         speed: {
             basic: {
+                basic: {
+                    slot: "damage"
+                },
+                power: {
+                    slot: "utility"
+                },
+                super: {
+                    slot: "defense"
+                },
                 slot: "damage"
             },
-            slot: "defense",
+            slot: "defense"
         },
         slot: "damage"
     },
     defense: {
         basic: {
+            basic: {
+                slot: "defense"
+            },
             slot: "defense"
         },
         health: {
-            slot: "damage",
+            basic: {
+                slot: "defense"
+            },
+            slot: "damage"
         },
         toughness: {
             basic: {
-                slot: "defense",
+                slot: "defense"
             },
-            slot: "utility",
+            slot: "utility"
         },
         slot: "defense"
     },
     utility: {
         basic: {
-            slot: "utility",
+            basic: {
+                slot: "utility"
+            },
+            slot: "utility"
         },
         laser: {
-            slot: "damage",
+            basic: {
+                slot: "utility"
+            },
+            slot: "damage"
         },
         speed: {
-            slot: "defense",
+            basic: {
+                slot: "utility"
+            },
+            slot: "defense"
         },
         slot: "utility"
     }
@@ -102,7 +135,11 @@ class Slots {
 }
 
 let availablePathes = {};
-let unlockedPathes = {};
+let unlockedPathes = {
+    DamageStep: 1, DamageSuper: 1,
+    DefenseStep: 1, DefenseSuper: 1,
+    UtilityStep: 1, UtilitySuper: 1,
+};
 const unlock = unlocks => {
     if (!unlocks) { return; }
     table.iterate(unlocks,u => { if (!u) { return; } u.priority ++; unlock(u.unlocks); });
@@ -135,60 +172,88 @@ class Path {
 let xpmultiplier = 1;
 let maxpaths = 2;
 export const SetScoreDifficulty = diff => {
-    if (diff.xpmultiplier) { xpmultiplier += diff.xpmultiplier; }
+    if (diff.xpmultiplier) { xpmultiplier *= diff.xpmultiplier; }
     if (diff.maxpaths) { maxpaths = diff.maxpaths; }
 }
 const shop = {
-    dmgroot: new Upgrade("+2 damage","Your ship's lasers\nwill deal an\nadditional\n2 damage\non hit.",new Slots(slotpathes.damage),() => { AddPower("dmg",2); }),
-    dmgbasic0: new Upgrade("+3 damage","Your ship's lasers\nwill deal an\nadditional\n3 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",3); }),
-    dmgbasic1: new Upgrade("+1 damage","Lasers do\n1 more damage\nand unlocks\nmore upgrades.",new Slots(slotpathes.damage.basic.basic),() => { AddPower("damage",2); }),
+    dmgroot: new Upgrade("Damage","Your ship's lasers will deal an additional 2 damage on hit. Unlocks the damage path.",new Slots(slotpathes.damage),() => { AddPower("dmg",2); }),
+    dmgbasic0: new Upgrade("Stronger lasers","Your ship's lasers will deal an additional 3 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",3); }),
+    dmgbasic1: new Upgrade("Laser engine","Lasers do 1 more damage. Unlocks powerful upgrades.",new Slots(slotpathes.damage.basic.basic),() => { AddPower("dmg",1); }),
+    dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 6 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",6); }),
+    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 18, but decreases firing speed by 4.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("dmg",18); player.shootspeed -= 4; AddPower("shootspeed",-4); }),
+    dmgbasicsuper: new Upgrade("Power shot","Increases damage by 9 but decreases piercing capabilities by 5.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-5); AddPower("dmg",9); }),
+
+    dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
+    dmgpierce1: new Upgrade("Razor sharp lasers","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
     
-    dmgpierce0: new Upgrade("+3 pierce","Empowers\nthe lasers\nto pierce through\n3 additional\ntargets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
-    dmgpierce1: new Upgrade("+2 pierce","Lasers\npierce through\nmore targets\nand unlocks\nmore upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
+    dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 2 additional blasts per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 2; AddPower("shootspeed",2); AddPower("inaccuracy",0.02); }),
+    dmgspeed1: new Upgrade("Power cooler","Shoots 1 additional laser per second. Unlocks powerful upgrades.",new Slots(slotpathes.damage.speed.basic),() => { player.shootspeed += 1; AddPower("shootspeed",1); }),
+    dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 5 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 5; AddPower("shootspeed",5)}),
+    dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 12, but decreases attack damage by 4.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 12; AddPower("shootspeed",12); AddPower("dmg",-4)}),
+    dmgspeedsuper: new Upgrade("Minigun","Increases attack speed by 8 at the cost of reduced accuracy.",new Slots(slotpathes.damage.speed.basic.super), () => { player.shootspeed += 8; AddPower("shootspeed",8); AddPower("inaccuracy",0.2); }),
+
+    defenseroot: new Upgrade("Defense","Your ship can take an additional 50 hp of damage before getting destroyed. Unlocks the defense path.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defensebasic0: new Upgrade("Hard plates","Adds hard plating to your ship to resist weaker hits. Increases defense by 4",new Slots(slotpathes.defense.basic),() => { player.defense += 4; AddPower("defense",4); }),
+    defensebasic1: new Upgrade("Hard frame","Increases defense by 2. Unlocks powerful upgrades.",new Slots(slotpathes.defense.basic.basic),() => { player.defense += 2; AddPower("defense",2); }),
     
-    dmgspeed0: new Upgrade("+2 speed","Overclocks\nthe laser\nreceptors to shoot\n2 additional\nblasts per\nsecond.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
-    dmgspeed1: new Upgrade("+2 speed","Shoots 2\nextra blasts\nper second and\nunlocks more\nupgrades.",new Slots(slotpathes.damage.speed.basic),() => { player.shootspeed += 2; AddPower("shootspeed",2); }),
+    defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 75 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
+    defensehealth1: new Upgrade("Stronger frame","Increases health by 50hp. Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    
+    defensetoughness0: new Upgrade("Tough plates","Adds tough plating to your ship to weaken strong hits. Increases toughness by 2",new Slots(slotpathes.defense.toughness),() => { player.toughness += 2; AddPower("toughness",2); }),
+    defensetoughness1: new Upgrade("Tough frame","Increases toughness by 1. Unlocks powerful upgrades.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 1; AddPower("toughness",1); }),
 
 
-    defenseroot: new Upgrade("+50 hp","Your ship can\ntake an\nadditional\n50 hp\nof damage\nbefore getting\ndestroyed.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
-    defensebasic0: new Upgrade("+4 defense","Adds hard plating\nto your ship\nto resist\nweaker hits.",new Slots(slotpathes.defense.basic),() => { player.defense += 4; AddPower("defense",4); }),
-    defensebasic1: new Upgrade("+2 defense","Increases defense\nand unlocks\nmore upgrades.",new Slots(slotpathes.defense.basic.basic),() => { player.defense += 2; AddPower("defense",2); }),
+    utilityroot: new Upgrade("Utility","XP drops are increased by 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
+    utilitybasic0: new Upgrade("XP booster","XP drops are increased by an additional 50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
+    utilitybasic1: new Upgrade("XP engine","Increases XP drops by 10%. Unlocks powerful upgrades.",new Slots(slotpathes.utility.basic.basic),() => { xpmultiplier *= 1.1; }),
     
-    defensehealth0: new Upgrade("+75 hp","Strengthens\nyour ship's\ninternals\nto take\nmore hits\nbefore getting\ndestroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
-    defensehealth1: new Upgrade("+50 hp","Increases health\nand unlocks\nmore upgrades.",new Slots(slotpathes.defense.health.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
+    utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.01); }),
     
-    defensetoughness0: new Upgrade("+2\ntoughness","Adds tough\nplating to\nyour ship\nto weaken\nstrong hits.",new Slots(slotpathes.defense.toughness),() => { player.toughness += 1; AddPower("toughness",2); }),
-    defensetoughness1: new Upgrade("+1\ntoughness","Even tougher\nplating and\nmore upgrades.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 2; AddPower("toughness",1); }),
-
-
-    utilityroot: new Upgrade("+25% xp","XP drops are\nincreased\nby 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
-    utilitybasic0: new Upgrade("+50% xp","XP drops are\nincreased by\nan additional\n50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
-    utilitylaser0: new Upgrade("+250 laser\nspeed","Your ship's lasers\nwill travel faster\nand deal more\nknockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
-    utilityspeed0: new Upgrade("100%\nacceleration","Your ship\nwill accelerate\ntwice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
+    utilityspeed0: new Upgrade("Power engines","Your ship will accelerate twice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
+    utilityspeed1: new Upgrade("Side engines","Your ship will rotate 50% faster. Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
 }
 const mainpathes = [
-    new Path("Damagepath","P0",shop.dmgroot,[
-        new Path("DamageBasic","P0-0",shop.dmgbasic0,[
-            new Path("DamageBasic1","P0-0.0",shop.dmgbasic1,[]),
+    new Path("Damagepath","Root",shop.dmgroot,[
+        new Path("DamageBasic","Damage",shop.dmgbasic0,[
+            new Path("DamageBasic1","DamageStep",shop.dmgbasic1,[
+                new Path("DamageBasicBasic","DamageSuper",shop.dmgbasicbasic,[]),
+                new Path("DamageBasicPower","DamageSuper",shop.dmgbasicpower,[]),
+                new Path("DamageBasicSuper","DamageSuper",shop.dmgbasicsuper,[]),
+            ]),
         ]),
-        new Path("DamagePierce","P0-0",shop.dmgpierce0,[
+        new Path("DamagePierce","Damage",shop.dmgpierce0,[
             new Path("Damagepierce1","P0-0.1",shop.dmgpierce1,[]),
         ]),
-        new Path("DamageSpeed","P0-0",shop.dmgspeed0,[
-            new Path("DamageSpeed1","P0-0.2",shop.dmgspeed1,[]),
+        new Path("DamageSpeed","Damage",shop.dmgspeed0,[
+            new Path("DamageSpeed1","DamageStep",shop.dmgspeed1,[
+                new Path("DamageSpeedBasic","DamageSuper",shop.dmgspeedbasic,[]),
+                new Path("DamageSpeedPower","DamageSuper",shop.dmgspeedpower,[]),
+                new Path("DamageSpeedSuper","DamageSuper",shop.dmgspeedsuper,[]),
+            ]),
         ]),
     ],true),
-    new Path("Defensepath","P0",shop.defenseroot,[
-        new Path("DefenseBasic","P0-1",shop.defensebasic0,[]),
-        new Path("DefenseHealth","P0-1",shop.defensehealth0,[]),
+    new Path("Defensepath","Root",shop.defenseroot,[
+        new Path("DefenseBasic","P0-1",shop.defensebasic0,[
+            new Path("DefenseBasic1","P0-1.0",shop.defensebasic1,[]),
+        ]),
+        new Path("DefenseHealth","P0-1",shop.defensehealth0,[
+            new Path("DefenseHealth1","P0-1.1",shop.defensehealth1,[]),
+        ]),
         new Path("DefenseToughness","P0-1",shop.defensetoughness0,[
             new Path("DefenseToughness1","P0-1.2",shop.defensetoughness1,[]),
         ]),
     ],true),
-    new Path("Utilitypath","P0",shop.utilityroot,[
-        new Path("UtilityBasic","P0-2",shop.utilitybasic0,[]),
-        new Path("UtilityLaser","P0-2",shop.utilitylaser0,[]),
-        new Path("UtilitySpeed","P0-2",shop.utilityspeed0,[]),
+    new Path("Utilitypath","Root",shop.utilityroot,[
+        new Path("UtilityBasic","P0-2",shop.utilitybasic0,[
+            new Path("UtilityBasic1","P0-2.0",shop.utilitybasic1,[]),
+        ]),
+        new Path("UtilityLaser","P0-2",shop.utilitylaser0,[
+            new Path("UtilityLaser1","P0-2.1",shop.utilitylaser1,[]),
+        ]),
+        new Path("UtilitySpeed","P0-2",shop.utilityspeed0,[
+            new Path("UtilitySpeed1","P0-2.2",shop.utilityspeed1,[]),
+        ]),
     ],true),
 ];
 
@@ -300,7 +365,7 @@ const promptPurchase = async completed => {
     if (options[2]) { options[2].weight = 0; }
     
     let w = 2;
-    let s = 82;
+    let s = 94;
     table.iterate(options, option => {
         if (!option) { return; }
         w += s + 2;
@@ -368,7 +433,7 @@ const promptPurchase = async completed => {
             completed();
             return;
         }
-        c.title = new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(1,0,0,64), anchor: new Anchor(.5,.5), text: "Choose upgrade", textsize: 25});
+        c.title = new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(5,0,0,64), anchor: new Anchor(.5,.5), text: "Choose upgrade", textsize: 25});
         bg.children = c;
         ui.redraw();
     });

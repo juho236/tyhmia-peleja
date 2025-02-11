@@ -96,6 +96,7 @@ export const Load = async () => {
     playerEntity.turnspeed = power.turnspeed;
     playerEntity.weight = 3;
     playerEntity.isPlayer = true;
+    console.log(power.dmg);
     //playerEntity.nocollisioncheck = true;
 
     playerEntity.shootspeed = power.shootspeed;
