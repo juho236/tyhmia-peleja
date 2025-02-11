@@ -31,7 +31,7 @@ export const lasership = {
         if (e.timer >= 1) {
             e.timer -= 1;
             shoot(e);
-            if (Math.random() >= 0) { e.targetpos = getTargetPos(e) };
+            if (Math.random() >= 0.1) { e.targetpos = getTargetPos(e) };
         }
         d = e.targetpos.sub(e.pos);
 

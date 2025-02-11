@@ -13,7 +13,7 @@ async function main() {
     console.log("Start loading");
     let data = await LoadData();
     console.log(data);
-    await LoadGame();
+    await LoadGame(data);
     LoadRenderer(canvas, ctx);
     
     Load();
