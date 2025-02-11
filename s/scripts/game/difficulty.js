@@ -1,5 +1,6 @@
 import { Pause, Resume } from "../engine/frame.js";
 import { Anchor, Color, Frame, Scale2, UILayer, Text } from "../engine/ui.js"
+import { SetSaveKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
 import { Layers } from "../renderer/render.js";
 import { SetEnemyDifficulty } from "./enemies.js";
@@ -12,14 +13,15 @@ const options = [
     {display: "Hard", healthmultiplier: 1.333, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, xpmultiplier: 1}
 ]
 let ui;
-export const Load = async completed => {
+export const Load = async (completed,savedata) => {
     ui = new UILayer(Layers.popup);
 
     new Promise(completed => {
+        if (savedata.difficulty) { completed(options[savedata.difficulty]); return; }
         let c = {};
         let canclick = true;
         let index = 0;
-        table.iterate(options, option => {
+        table.iterate(options, (option,i) => {
             let f;
             f = new Frame(
                 {
@@ -31,7 +33,7 @@ export const Load = async completed => {
                         if (!canclick) { return; }
                         canclick = false;
                         
-                        
+                        SetSaveKey("difficulty",i);
                         completed(option);
                     },
                     onhover: () => {
@@ -58,7 +60,7 @@ export const Load = async completed => {
                 ...c
             })
         }
-        ui.redraw();
+        ui.redraw(); 
         Pause();
     }).then(async d => {
         ui.children = {};

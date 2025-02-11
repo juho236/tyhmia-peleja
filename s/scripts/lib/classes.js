@@ -359,11 +359,15 @@ export class entity {
         this.health = Math.max(0,this.health - dmg);
 
         if (this.ondamage) { this.ondamage(this,dmg,damager); }
-        if (this.health <= 0) { if (this.score) {
+        if (this.health <= 0) {
+            if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); }
             if (this.deathEffect) { await this.deathEffect(this); }
-            AddScore(this.score,this.pos.x,this.pos.y); }
             this.died();
         }
+    }
+    heal(heal) {
+        this.health = Math.min(this.maxhealth,this.health + heal);
+        if (this.ondamage) { this.ondamage(this,-heal); }
     }
     
     destroy() {

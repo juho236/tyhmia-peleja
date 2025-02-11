@@ -1,5 +1,6 @@
 import { Add, Remove } from "../engine/frame.js";
 import { ClampAngle, v2, ExplosionProjectile, dustParticleEmitter, entity, fireParticleEmitter } from "../lib/classes.js";
+import { SetSaveKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
@@ -7,7 +8,7 @@ import { boss1 } from "./enemies/boss1.js";
 import { lasership } from "./enemies/lasership.js";
 import { SaveScore, SetScore } from "./score.js";
 
-let waveIndex = 10;
+let waveIndex = 0;
 
 let waves = [
     {pattern: [
@@ -475,13 +476,14 @@ const spawnWave = async index => {
     const wave = waves[index];
 
     waveIndex = index;
+    SetSaveKey("wave",waveIndex);
     await SaveScore();
 
     try {
         await wavePart(wave.pattern,0);
         spawnWave(index + 1);
     } catch (err) {
-
+        console.log("No more waves :(");
     }
 }
 
@@ -521,9 +523,10 @@ const startFromWave = wave => {
 
     SetScore(s);
 }
-export const Load = async () => {
+export const Load = async (savedata) => {
     LoadEnemies();
-    startFromWave(12);
+    //startFromWave(12);
+    waveIndex = savedata.wave || 0;
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

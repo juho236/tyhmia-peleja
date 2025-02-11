@@ -4,15 +4,12 @@ import { Load as LoadScore } from "./score.js";
 import { Load as LoadEnemies } from "./enemies.js";
 import { Load as LoadDifficulty } from "./difficulty.js";
 
-export const Load = async () => {
-    await LoadBackground();
-    await LoadScore();
+export const Load = async savedata => {
+    await LoadBackground(savedata);
+    await LoadScore(savedata);
 
-    new Promise(async completed => {
-        await LoadDifficulty(async () => {
-            await LoadEnemies();
-            await LoadPlayer();
-            completed();
-        });
-    });
+    LoadDifficulty(async () => {
+        await LoadEnemies(savedata);
+        await LoadPlayer(savedata);
+    },savedata);
 }

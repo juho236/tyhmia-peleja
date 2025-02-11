@@ -1,6 +1,7 @@
 import { Add, AddIndependent, Pause, Remove, RemoveIndependent, Resume } from "../engine/frame.js";
 import { Anchor, Color, Frame, Image, Scale2, Text, UILayer } from "../engine/ui.js";
 import { AmbientEntity, v2 } from "../lib/classes.js";
+import { SetSaveKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers } from "../renderer/render.js";
@@ -34,6 +35,15 @@ const slotpathes = {
         },
         pierce: {
             basic: {
+                basic: {
+                    slot: "damage"
+                },
+                power: {
+                    slot: "defense"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "damage"
             },
             slot: "utility"
@@ -79,6 +89,15 @@ const slotpathes = {
     utility: {
         basic: {
             basic: {
+                basic: {
+                    slot: "utility"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "defense"
+                },
                 slot: "utility"
             },
             slot: "utility"
@@ -144,6 +163,7 @@ const unlock = unlocks => {
     if (!unlocks) { return; }
     table.iterate(unlocks,u => { if (!u) { return; } u.priority ++; unlock(u.unlocks); });
 }
+let allupgrades = {};
 class Path {
     constructor(name,path,upg,unlocks,unlocked) {
         this.name = name;
@@ -153,6 +173,7 @@ class Path {
         this.weight = 1;
         this.priority = 0;
         unlock(this.unlocks);
+        allupgrades[name] = this;
 
         if (unlocked) { this.unlock(); }
     }
@@ -167,9 +188,19 @@ class Path {
 
         table.insert(availablePathes[this.priority],this);
     }
+    buy() {
+        if (this.unlocks) { table.iterate(this.unlocks,unlock => { unlock.unlock(); }); }
+        this.remove();
+        this.upgrade.callback();
+    }
 }
 
 let xpmultiplier = 1;
+let freelevel = 0;
+let freelevels = 0;
+let leveldamage = 0;
+let totalleveldamage = 0;
+let absorption = 0;
 let maxpaths = 2;
 export const SetScoreDifficulty = diff => {
     if (diff.xpmultiplier) { xpmultiplier *= diff.xpmultiplier; }
@@ -184,8 +215,11 @@ const shop = {
     dmgbasicsuper: new Upgrade("Power shot","Increases damage by 9 but decreases piercing capabilities by 5.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-5); AddPower("dmg",9); }),
 
     dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
-    dmgpierce1: new Upgrade("Razor sharp lasers","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
-    
+    dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
+    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 10 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",10); }),
+    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-200); }),
+    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 30 additional targets, but deals 3 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",30); AddPower("dmg",-3); }),
+
     dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 2 additional blasts per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 2; AddPower("shootspeed",2); AddPower("inaccuracy",0.02); }),
     dmgspeed1: new Upgrade("Power cooler","Shoots 1 additional laser per second. Unlocks powerful upgrades.",new Slots(slotpathes.damage.speed.basic),() => { player.shootspeed += 1; AddPower("shootspeed",1); }),
     dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 5 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 5; AddPower("shootspeed",5)}),
@@ -206,7 +240,10 @@ const shop = {
     utilityroot: new Upgrade("Utility","XP drops are increased by 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
     utilitybasic0: new Upgrade("XP booster","XP drops are increased by an additional 50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
     utilitybasic1: new Upgrade("XP engine","Increases XP drops by 10%. Unlocks powerful upgrades.",new Slots(slotpathes.utility.basic.basic),() => { xpmultiplier *= 1.1; }),
-    
+    utilitybasicbasic: new Upgrade("XP generator","Grants a free level-up every third round.",new Slots(slotpathes.utility.basic.basic.basic),() => { freelevel += 0.34; }),
+    utilitybasicpower: new Upgrade("XP materializer","Increases laser damage by 2 for every level-up.",new Slots(slotpathes.utility.basic.basic.power),() => { leveldamage += 2; }),
+    utilitybasicsuper: new Upgrade("Super XP absorber","Gaining XP will heal 6 hp.",new Slots(slotpathes.utility.basic.basic.super),() => { absorption += 6; }),
+
     utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
     utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.01); }),
     
@@ -223,7 +260,11 @@ const mainpathes = [
             ]),
         ]),
         new Path("DamagePierce","Damage",shop.dmgpierce0,[
-            new Path("Damagepierce1","P0-0.1",shop.dmgpierce1,[]),
+            new Path("Damagepierce1","DamageStep",shop.dmgpierce1,[
+                new Path("DamagePierceBasic","DamageSuper",shop.dmgpiercebasic,[]),
+                new Path("DamagePiercePower","DamageSuper",shop.dmgpiercepower,[]),
+                new Path("DamagePierceSuper","DamageSuper",shop.dmgpiercesuper,[]),
+            ]),
         ]),
         new Path("DamageSpeed","Damage",shop.dmgspeed0,[
             new Path("DamageSpeed1","DamageStep",shop.dmgspeed1,[
@@ -234,28 +275,33 @@ const mainpathes = [
         ]),
     ],true),
     new Path("Defensepath","Root",shop.defenseroot,[
-        new Path("DefenseBasic","P0-1",shop.defensebasic0,[
-            new Path("DefenseBasic1","P0-1.0",shop.defensebasic1,[]),
+        new Path("DefenseBasic","Defense",shop.defensebasic0,[
+            new Path("DefenseBasic1","DefenseStep",shop.defensebasic1,[]),
         ]),
-        new Path("DefenseHealth","P0-1",shop.defensehealth0,[
-            new Path("DefenseHealth1","P0-1.1",shop.defensehealth1,[]),
+        new Path("DefenseHealth","Defense",shop.defensehealth0,[
+            new Path("DefenseHealth1","DefenseStep",shop.defensehealth1,[]),
         ]),
-        new Path("DefenseToughness","P0-1",shop.defensetoughness0,[
-            new Path("DefenseToughness1","P0-1.2",shop.defensetoughness1,[]),
+        new Path("DefenseToughness","Defense",shop.defensetoughness0,[
+            new Path("DefenseToughness1","DefenseStep",shop.defensetoughness1,[]),
         ]),
     ],true),
     new Path("Utilitypath","Root",shop.utilityroot,[
-        new Path("UtilityBasic","P0-2",shop.utilitybasic0,[
-            new Path("UtilityBasic1","P0-2.0",shop.utilitybasic1,[]),
+        new Path("UtilityBasic","Utility",shop.utilitybasic0,[
+            new Path("UtilityBasic1","UtilityStep",shop.utilitybasic1,[
+                new Path("UtilityBasicBasic","UtilitySuper",shop.utilitybasicbasic,[]),
+                new Path("UtilityBasicPower","UtilitySuper",shop.utilitybasicpower,[]),
+                new Path("UtilityBasicSuper","UtilitySuper",shop.utilitybasicsuper,[]),
+            ]),
         ]),
-        new Path("UtilityLaser","P0-2",shop.utilitylaser0,[
-            new Path("UtilityLaser1","P0-2.1",shop.utilitylaser1,[]),
+        new Path("UtilityLaser","Utility",shop.utilitylaser0,[
+            new Path("UtilityLaser1","UtilityStep",shop.utilitylaser1,[]),
         ]),
-        new Path("UtilitySpeed","P0-2",shop.utilityspeed0,[
-            new Path("UtilitySpeed1","P0-2.2",shop.utilityspeed1,[]),
+        new Path("UtilitySpeed","Utility",shop.utilityspeed0,[
+            new Path("UtilitySpeed1","UtilityStep",shop.utilityspeed1,[]),
         ]),
     ],true),
 ];
+let savedupgrades = [];
 
 let ui;
 let slotTextures;
@@ -403,11 +449,11 @@ const promptPurchase = async completed => {
                     onclick: () => {
                         if (!canclick) { return; }
                         canclick = false;
-                        upg.callback();
-                        if (option.unlocks) { table.iterate(option.unlocks,unlock => { unlock.unlock(); }); }
+                        table.insert(savedupgrades,option.name);
+                        SetSaveKey("upgrades",savedupgrades);
+                        option.buy();
                         bg.children = {};
                         ui.redraw();
-                        option.remove();
                         completed();
                     },
                     onhover: () => {
@@ -497,8 +543,15 @@ const spawnBig = (count,x,y) => {
     }
 }
 
+let shouldunlock = false;
 export const SetPlayer = plr => {
     player = plr;
+    if (!shouldunlock) { return; }
+    shouldunlock = false;
+    
+    table.iterate(savedupgrades,upg => {
+        allupgrades[upg].buy();
+    });
 }
 
 let totalxp = 0;
@@ -526,6 +579,7 @@ const updatexp = () => {
     AddXP(xp,t,l);
 }
 export const AddScore = (sc,x,y) => {
+    player.heal(absorption);
     sc *= xpmultiplier;
     score += sc;
     totalxp += sc;
@@ -550,15 +604,23 @@ export const GetScore = () => {
 }
 export const SaveScore = async () => {
     savedScore = score;
+    SetSaveKey("score",savedScore);
     savedtotalxp = totalxp;
     let levels = false;
+    freelevels += freelevel;
     while (true) {
         let levelTreshold = 75 + level * 120;
-        if (savedScore < levelTreshold) { break; }
+        if (freelevels > 0) { freelevels -= 1; } else {
+            if (savedScore < levelTreshold) { break; }
+            
+            level += 1;
+            savedScore -= levelTreshold;
+        }
 
         console.log("Levelup");
-        level += 1;
-        savedScore -= levelTreshold;
+        AddPower("dmg",leveldamage);
+        console.log(leveldamage);
+        totalleveldamage += leveldamage;
         if (!levels) {
             levels = true;
             ui.children = {
@@ -567,6 +629,9 @@ export const SaveScore = async () => {
         }
         Pause();
         await new Promise(promptPurchase);
+        
+        SetSaveKey("level",level);
+        SetSaveKey("score",savedScore);
     }
     if (levels) {
         await tsize(ui.children.bg,new Scale2(0,0,0,0));
@@ -582,7 +647,7 @@ export const LoadScore = () => {
     score = savedScore;
     totalxp = savedtotalxp;
 }
-export const Load = async () => {
+export const Load = async savedata => {
     xptextures4 = await TextureBuffers(await LoadTextures({
         tiny: "assets/xptiny.png",
         small: "assets/xpsmall.png"
@@ -601,4 +666,10 @@ export const Load = async () => {
     }),6,6);
 
     ui = new UILayer(Layers.shop);
+
+    savedScore = savedata.score || 0;
+    level = savedata.level || 0;
+
+    savedupgrades = savedata.upgrades || [];
+    shouldunlock = true;
 }
