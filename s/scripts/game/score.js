@@ -207,24 +207,24 @@ export const SetScoreDifficulty = diff => {
     if (diff.maxpaths) { maxpaths = diff.maxpaths; }
 }
 const shop = {
-    dmgroot: new Upgrade("Damage","Your ship's lasers will deal an additional 2 damage on hit. Unlocks the damage path.",new Slots(slotpathes.damage),() => { AddPower("dmg",2); }),
-    dmgbasic0: new Upgrade("Stronger lasers","Your ship's lasers will deal an additional 3 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",3); }),
-    dmgbasic1: new Upgrade("Laser engine","Lasers do 1 more damage. Unlocks powerful upgrades.",new Slots(slotpathes.damage.basic.basic),() => { AddPower("dmg",1); }),
-    dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 6 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",6); }),
-    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 18, but decreases firing speed by 4.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("dmg",18); player.shootspeed -= 4; AddPower("shootspeed",-4); }),
-    dmgbasicsuper: new Upgrade("Power shot","Increases damage by 9 but decreases piercing capabilities by 5.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-5); AddPower("dmg",9); }),
+    dmgroot: new Upgrade("Damage","Your ship's lasers will deal an additional 1 damage on hit. Unlocks the damage path.",new Slots(slotpathes.damage),() => { AddPower("dmg",1); }),
+    dmgbasic0: new Upgrade("Stronger lasers","Your ship's lasers will deal an additional 1 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",1); }),
+    dmgbasic1: new Upgrade("Laser engine","Unlocks powerful upgrades about laser damage.",new Slots(slotpathes.damage.basic.basic),() => { }),
+    dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 2 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",2); }),
+    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 7, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("dmg",7); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
+    dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 5.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-5); AddPower("dmg",4); }),
 
     dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
     dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
     dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 10 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",10); }),
-    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-200); }),
-    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 30 additional targets, but deals 3 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",30); AddPower("dmg",-3); }),
+    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move much slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-300); }),
+    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 30 additional targets, but deals 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",30); AddPower("dmg",-2); }),
 
-    dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 2 additional blasts per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 2; AddPower("shootspeed",2); AddPower("inaccuracy",0.02); }),
-    dmgspeed1: new Upgrade("Power cooler","Shoots 1 additional laser per second. Unlocks powerful upgrades.",new Slots(slotpathes.damage.speed.basic),() => { player.shootspeed += 1; AddPower("shootspeed",1); }),
-    dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 5 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 5; AddPower("shootspeed",5)}),
-    dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 12, but decreases attack damage by 4.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 12; AddPower("shootspeed",12); AddPower("dmg",-4)}),
-    dmgspeedsuper: new Upgrade("Minigun","Increases attack speed by 8 at the cost of reduced accuracy.",new Slots(slotpathes.damage.speed.basic.super), () => { player.shootspeed += 8; AddPower("shootspeed",8); AddPower("inaccuracy",0.2); }),
+    dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 1 additional blast per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 1; AddPower("shootspeed",1); AddPower("inaccuracy",0.01); }),
+    dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => { }),
+    dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 2 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 2; AddPower("shootspeed",2)}),
+    dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 6, but decreases attack damage by 4.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 6; AddPower("shootspeed",6); AddPower("dmg",-4)}),
+    dmgspeedsuper: new Upgrade("Minigun","Increases attack speed by 3 at the cost of reduced accuracy.",new Slots(slotpathes.damage.speed.basic.super), () => { player.shootspeed += 3; AddPower("shootspeed",3); AddPower("inaccuracy",0.33); }),
 
     defenseroot: new Upgrade("Defense","Your ship can take an additional 50 hp of damage before getting destroyed. Unlocks the defense path.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensebasic0: new Upgrade("Hard plates","Adds hard plating to your ship to resist weaker hits. Increases defense by 4",new Slots(slotpathes.defense.basic),() => { player.defense += 4; AddPower("defense",4); }),
