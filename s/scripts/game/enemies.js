@@ -53,9 +53,12 @@ let waves = [
         {id: "enemy",enemy: "lasership",count: 2,time: 20},
     ]},
     {pattern: [
-        {id: "enemy",enemy: "lasership",count: 3,time: 30,parallel: true},
-        {id: "enemy",enemy: "mine",count: 18,time: 5}
+        {id: "enemy",enemy: "lasership",count: 3,time: 10,parallel: true},
+        {id: "enemy",enemy: "missile",count: 15,time: 2}
     ]},
+    {pattern:[
+        {id: "enemy",enemy: "lasership",count: 20,time: 1}
+    ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -132,7 +135,7 @@ const LoadEnemies = () => {
             height: 16,
             size: new v2(16,16),
             hitbox: new v2(8,8),
-            score: 55,
+            score: 35,
             health: 150,
             oob: true,
             load: e => {
@@ -520,7 +523,7 @@ const startFromWave = wave => {
 }
 export const Load = async () => {
     LoadEnemies();
-    startFromWave(11);
+    startFromWave(12);
     let promise = new Promise(completed => {
         let textures = 0;
         Object.entries(enemies).map(async i => {

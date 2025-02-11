@@ -443,8 +443,8 @@ const collision = (entity1, entity2, dt) => {
     if (entity1.group == entity2.group) {return; }
     if (table.find(entity1.activecollisions,entity2)) { return; }
     
+    entity1.damage(entity2.dmg || 1,entity2);
     entity2.damage(entity1.dmg || 1,entity1);
-    return entity1.damage(entity2.dmg || 1,entity2);
 }
 
 const intersectCircle = (circle, rect) => {

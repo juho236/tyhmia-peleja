@@ -54,7 +54,7 @@ export const Load = async completed => {
 
         ui.children = {
             bg: new Frame({size: new Scale2(0,150,0,60), pos: new Scale2(.5,0,.5,0), anchor: new Anchor(.5,.5), color: new Color(84,82,92,0)},{
-                title: new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(1,0,0,48), anchor: new Anchor(.5,.5), text: "Choose difficulty", textsize: 22}),
+                title: new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(2,0,0,48), anchor: new Anchor(.5,.5), text: "Choose difficulty", textsize: 22}),
                 ...c
             })
         }
