@@ -55,10 +55,17 @@ let waves = [
     ]},
     {pattern: [
         {id: "enemy",enemy: "lasership",count: 3,time: 10,parallel: true},
-        {id: "enemy",enemy: "missile",count: 15,time: 2}
+        {id: "enemy",enemy: "missile",count: 10,time: 3}
     ]},
     {pattern:[
         {id: "enemy",enemy: "lasership",count: 20,time: 1}
+    ]},
+    {pattern:[
+        {id: "enemy",enemy: "meteor",count: 5,time: 5}
+    ]},
+    {pattern:[
+        {id: "enemy",enemy: "meteor",count: 5,time: 0},
+        {id: "enemy",enemy: "lasership",count: 2,time: 10},
     ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -233,7 +240,7 @@ const LoadEnemies = () => {
                 e.lock -= dt;
                 if (e.lock > 0) { return; }
                 
-                e.detonate = 3;
+                if (!e.detonate) { e.detonate = 3; }
                 e.hitbox = 24;
     
                 e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
@@ -417,6 +424,84 @@ const LoadEnemies = () => {
                 for (let i=0;i < 15; i ++) { e.dust.emit(); }
                 e.velocity = new v2(0,0);
             }
+        },
+        meteor: {
+            textures: {default: "assets/meteor-medium1.png", default1: "assets/meteor-small2.png"},
+            width: 32,
+            height: 32,
+            size: new v2(32,32),
+            hitbox: new v2(26,26),
+            health: 235,
+            dmg: 21,
+            score: 15,
+            oob: true,
+            spawns: {count: 5, id: "smallmeteor"},
+            ai: (e,dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                e.trot = ClampAngle(e.trot + dt);
+                if (hardattacks) {
+                    let speed = 89;
+                    if (impossibleattacks) { speed = 115; }
+                    let d = player.pos.sub(e.pos);
+                    let m = e.velocity.magnitude();
+                    let t = Math.min(1,d.magnitude() / m);
+                    if (m == 0) { t = 0; }
+                    e.velocity = e.velocity.add(player.pos.add(player.velocity.multiply(t)).sub(e.pos).unit().multiply(dt * speed));
+                    e.velocity = e.velocity.sub(e.velocity.multiply(dt));
+                    return;
+                }
+                const u = player.pos.sub(e.pos).unit();
+                e.velocity = e.velocity.add(new v2(u.x,u.y).multiply(dt * 80));
+                e.velocity = e.velocity.sub(e.velocity.multiply(dt));
+    
+            },
+            load: e => {
+                //e.texture = e.textures["default"+(Math.floor(Math.random() * 2)).toString()];
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+                e.weight = 9;
+            },
+            ondamage: e => {
+                e.dust.emit();
+                Shake(0.6,0.5);
+            },
+            died: e => {
+                e.inactive = true;
+                Shake(1,0.5);
+    
+                let s = 5;
+                let b = Math.random();
+                for (let i=0; i < s; i ++) {
+                    const a = i / s + b;
+                    const spawn = spawnEnemy("smallmeteor");
+                    
+                    const rot = a * Math.PI * 2;
+                    spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
+                    spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(120).add(e.velocity);
+                    spawn.iframes = 0.25;
+                }
+                s = 12;
+                b = Math.random();
+                for (let i=0; i < s; i ++) {
+                    const a = i / s + b;
+                    const spawn = spawnEnemy("tinymeteor");
+                    
+                    const rot = a * Math.PI * 2;
+                    spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
+                    spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
+                    spawn.iframes = 0.25;
+                }
+                e.invisible = true;
+                e.removetimer = 4;
+                
+                for (let i=0;i < 32; i ++) { e.dust.emit(); }
+                e.velocity = new v2(0,0);
+            }
         }
     }
 }
@@ -450,7 +535,7 @@ const spawnEnemy = id => {
     e.event = Add(dt => {
         enemy.ai(e,dt);
         e.frame(dt);
-        e.render();
+        e.render(dt);
     });
     e.removing = () => {
         table.remove(enemylist,e);

@@ -1,6 +1,6 @@
 import { Add, Remove } from "../engine/frame.js";
 import { AddScore } from "../game/score.js";
-import { height, Shake, width } from "../renderer/render.js";
+import { GetShake, height, Shake, width } from "../renderer/render.js";
 import { table } from "./table.js";
 import { BlankBuffer, ColorCopy } from "./texture.js";
 
@@ -306,7 +306,7 @@ export const transform = (rot,offset) => {
     return new v2(Math.cos(rot) * offset.x - Math.sin(rot) * offset.y,Math.sin(rot) * offset.x + Math.cos(rot) * offset.y);
 }
 
-const draw = (entity,layer,buffer) => {
+const draw = (entity,layer,buffer,dt) => {
     if (entity.destroyed) { return; }
     if (entity.invisible) { return; }
     let texture = entity.texture;
@@ -318,9 +318,23 @@ const draw = (entity,layer,buffer) => {
     buffer.Draw.clearRect(0,0,entity.size.x,entity.size.y);
     const rot = entity.rot;
     buffer.Draw.setTransform(Math.cos(rot),Math.sin(rot),-Math.sin(rot),Math.cos(rot),entity.size.x / 2,entity.size.y / 2);
+
     buffer.Draw.drawImage(texture.Buffer,-entity.size.x / 2,-entity.size.y / 2);
 
-    layer.Draw.drawImage(buffer.Buffer,Math.round(entity.pos.x - entity.size.x / 2),Math.round(entity.pos.y - entity.size.y / 2));
+    let pos = entity.pos.add(GetShake());
+
+    let x = pos.x - entity.size.x / 2;
+    let y = pos.y - entity.size.y / 2;
+
+    if (entity.lastpos) {
+        let p = entity.lastpos.sub(pos).divide(1.5);
+        layer.Draw.globalAlpha = 0.45;
+        layer.Draw.drawImage(buffer.Buffer,x + p.x,y + p.y);
+        layer.Draw.drawImage(buffer.Buffer,x - p.x,y - p.y);
+        layer.Draw.globalAlpha = 1;
+    }
+    entity.lastpos = pos;
+    layer.Draw.drawImage(buffer.Buffer,x,y);
 }
 
 const entities = [];
@@ -396,9 +410,9 @@ export class entity {
         if (this.nocollisioncheck) { return; }
         collide(this,dt);
     }
-    render() {
+    render(dt) {
         if (this.destroyed) { return; }
-        draw(this,this.layer,this.buffer);
+        draw(this,this.layer,this.buffer,dt);
         this.emitters.map(emitter => {
             if (!emitter) { return; }
             emitter.render();
@@ -432,7 +446,18 @@ const collision = (entity1, entity2, dt) => {
             entity1.velocity = entity1.velocity.add(vel2.multiply(weight2 / weight1));
         } else {
             let d = entity1.pos.sub(entity2.pos);
-            entity1.velocity = entity1.velocity.add(d.unit().multiply(64 - d.magnitude()).multiply(dt));
+            let w = 0;
+            let h = 0;
+            if (typeof entity1.hitbox == "number") { w += entity1.hitbox / 2; h += entity1.hitbox / 2 } else { w += entity1.hitbox.x / 2; h += entity1.hitbox.y / 2; }
+            if (typeof entity2.hitbox == "number") { w += entity2.hitbox / 2; h += entity2.hitbox / 2; } else { w += entity2.hitbox.x / 2; h += entity2.hitbox.y / 2; }
+        
+            let dd = new v2(d.x - Math.sign(d.x) * (w),d.y - Math.sign(d.y) * (h));
+            if (Math.abs(d.y) >= h) { dd.y = 0; }
+            if (Math.abs(d.x) >= w) { dd.x = 0; }
+            
+            dd = dd.multiply(dt * 8);
+            entity1.pos = entity1.pos.sub(dd);
+            entity2.pos = entity2.pos.add(dd);
         }
     }
     if (!entity2.unmovable) {
@@ -447,6 +472,10 @@ const collision = (entity1, entity2, dt) => {
     if (entity1.group == entity2.group) {return; }
     if (table.find(entity1.activecollisions,entity2)) { return; }
     
+    
+    if (entity1.hit) { entity1.hit(entity2); }
+    if (entity2.hit) { entity2.hit(entity1); }
+
     entity1.damage(entity2.dmg || 1,entity2);
     entity2.damage(entity1.dmg || 1,entity1);
 }
@@ -521,7 +550,7 @@ class projectile {
 
         this.fr = Add(dt => {
             this.frame(dt);
-            this.render();
+            this.render(dt);
         })
         table.insert(entities,this);
     }
@@ -552,8 +581,8 @@ class projectile {
 
         //collide(this,dt);
     }
-    render() {
-        draw(this,this.layer,this.buffer);
+    render(dt) {
+        draw(this,this.layer,this.buffer,dt);
     }
 }
 

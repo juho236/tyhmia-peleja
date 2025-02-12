@@ -1,6 +1,7 @@
 import { table } from "../lib/table.js";
 import { BlankBuffer } from "../lib/texture.js";
 import { AddMouseEvent, height, width } from "../renderer/render.js";
+import { Add, AddIndependent, RemoveIndependent } from "./frame.js";
 
 class Scale {
     constructor(scale, offset) {
@@ -72,19 +73,32 @@ let uilayers = [];
 export class UILayer {
     constructor(layer) {
         this.layer = layer;
+        this.buffer = BlankBuffer(width,height);
+        this.buffer2 = BlankBuffer(width,height);
         this.width = width;
         this.height = height;
+        this.event = AddIndependent(dt => {
+            if (!this.updated) { return; }
+            this.updated = false;
+
+            this.redraw();
+        });        
 
         table.insert(uilayers,this);
     }
+    updated = false;
     px = 0;
     py = 0;
     children = {};
 
+    remove() {
+        RemoveIndependent(this.event);
+    }
     addChild(c) {
         table.insert(this.children,c);
     }
     redraw() {
+        this.updated = true;
         this.layer.Draw.clearRect(0,0,this.width,this.height);
 
         redraw(this.children,this,this.layer);
@@ -116,16 +130,39 @@ class UIObject {
         let sx = this.size.x.scale * this.parent.width + this.size.x.offset;
         let sy = this.size.y.scale * this.parent.height + this.size.y.offset;
 
-        this.width = sx;
-        this.height = sy;
 
         let x = this.parent.px + px - sx * this.anchor.x;
         let y = this.parent.py + py - sy * this.anchor.y;
 
+        if (this.width != sx || this.height != sy) {
+            this.width = this.width || 0;
+            this.height = this.height || 0;
+
+            let dw = (sx - this.width) / 1.5;
+            let dh = (sy - this.height) / 1.5;
+
+            let w1 = sx - dw;
+            let h1 = sy - dh;
+            let x1 = this.parent.px + px - w1 * this.anchor.x;
+            let y1 = this.parent.py + py - h1 * this.anchor.y;
+            
+            let w2 = sx + dw;
+            let h2 = sy + dh;
+            let x2 = this.parent.px + px - w2 * this.anchor.x;
+            let y2 = this.parent.py + py - h2 * this.anchor.y;
+
+            this.buffer.Draw.globalAlpha = 0.45;
+            this.render(x1,y1,w1,h1);
+            this.render(x2,y2,w2,h2);
+            this.buffer.Draw.globalAlpha = 1;
+        }
+
+        this.render(x,y,sx,sy);
+        
+        this.width = sx;
+        this.height = sy;
         this.px = x;
         this.py = y;
-        
-        this.render(x,y,sx,sy);
     }
 }
 export class Frame extends UIObject {

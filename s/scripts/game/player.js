@@ -1,5 +1,5 @@
 import { Layers, width, height, GetMouse, Shake } from "../renderer/render.js";
-import { Add as AddTick, CancelFrame } from "../engine/frame.js";
+import { Add as AddTick, CancelFrame, SetFPSCallback } from "../engine/frame.js";
 import { LoadTexture, LoadTextures, TextureBuffer, TextureBuffers } from "../lib/texture.js";
 import { v2, entity, laserParticleEmitter, LaserProjectile, dustParticleEmitter, fireParticleEmitter } from "../lib/classes.js";
 import { table } from "../lib/table.js";
@@ -118,6 +118,73 @@ export const Load = async () => {
     const remove = () => {
         CancelFrame(async () => { playerEntity.destroy(); await Load(); });
     }
+
+    playerEntity.defense = power.defense;
+    playerEntity.toughness = power.toughness;
+    playerEntity.weight = power.sweight;
+    playerEntity.maxhealth = power.maxhealth;
+    playerEntity.health = playerEntity.maxhealth;
+
+    let hud = new UILayer(Layers.hud);
+    hud.children = {
+        healthbar: new Frame({size: new Scale2(0,64,0,16), pos: new Scale2(1,0,1,0), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
+            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(255,0,0,0)},{
+                bar: new Frame({size: new Scale2(1,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(0,255,0,0)}),
+                counter: new Text({anchor: new Anchor(.5,.5), pos: new Scale2(.5,0,0,1), color: new Color(0,0,0,0), textsize: 10, text: "75/75"})
+            })
+        }),
+        xpbar: new Frame({size: new Scale2(0,48,0,4), pos: new Scale2(1,0,1,-16), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
+            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(0,0,0,0)},{
+                bar: new Frame({size: new Scale2(0,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(64,0,128,0)}),
+                levels: new Text({anchor: new Anchor(.65,1), size: new Scale2(1,0,0,8), pos: new Scale2(0,0,1,0), textsize: 10, text: "0"})
+            })
+        }),
+        framerate: new Text({size: new Scale2(0,75,0,16), pos: new Scale2(1,0,0,0), anchor: new Anchor(1,0), textsize: 14, text: "0fps"})
+        //death: new Frame({size: new Scale2(0,128,)})
+    }
+    hud.redraw();
+    let healthbar = hud.children.healthbar.children.inset.children.bar;
+    let hptext = hud.children.healthbar.children.inset.children.counter;
+    let xpbar = hud.children.xpbar.children.inset.children.bar;
+    let leveltext = hud.children.xpbar.children.inset.children.levels;
+    let fpstext = hud.children.framerate;
+    let death = hud.children.death;
+    SetFPSCallback(fps => { fpstext.text = `${fps}fps`; });
+
+    playerEntity.died = () => {
+        playerEntity.invisible = true;
+        playerEntity.inactive = true;
+        playerEntity.deathtimer = 1;
+        Shake(25,2);
+        Shake(50,0.5);
+        hud.remove();
+
+        for (let i=0;i<32;i++) { playerEntity.scraps.emit(); }
+        for (let i=0;i<128;i++) { playerEntity.explode.emit(); }
+
+        //trail0.rate = 0;
+        //trail1.rate = 0;
+        //playerEntity.destroy();
+    }
+
+    playerEntity.scraps = new dustParticleEmitter("Scrap",0,playerEntity,new v2(0,0),scrap,new v2(4,4));
+    playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
+
+    playerEntity.ondamage = (p,dmg,dmgr) => {
+        healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
+        hptext.text = Math.ceil(playerEntity.health * 10) / 10 + "/" + playerEntity.maxhealth;
+        Shake(dmg / 2,0.5);
+
+        if (!dmgr) { return; }
+        playerEntity.velocity = playerEntity.velocity.add(dmgr.velocity.multiply((dmgr.weight || 1) / playerEntity.weight));
+    }
+    playerEntity.ondamage(playerEntity,0,playerEntity);
+    addxp = (xp,max,levels) => {
+        xpbar.size = new Scale2(xp / max,0,1,0);
+        leveltext.text = levels.toString();
+    }
+
+    
     playerEntity.event = AddTick(dt => {
         if (playerEntity.deathtimer) { playerEntity.deathtimer -= dt; if (playerEntity.deathtimer <= -2) { remove(); return -1; }}
         playerEntity.speed += dt * (500 - playerEntity.speed) / 2;
@@ -141,71 +208,10 @@ export const Load = async () => {
 
 
         playerEntity.frame(dt);
-        playerEntity.render();
+        playerEntity.render(dt);
+        
+        hud.redraw();
     });
-
-    playerEntity.defense = power.defense;
-    playerEntity.toughness = power.toughness;
-    playerEntity.weight = power.sweight;
-    playerEntity.maxhealth = power.maxhealth;
-    playerEntity.health = playerEntity.maxhealth;
-
-    let hud = new UILayer(Layers.hud);
-    hud.children = {
-        healthbar: new Frame({size: new Scale2(0,64,0,16), pos: new Scale2(1,0,1,0), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
-            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(255,0,0,0)},{
-                bar: new Frame({size: new Scale2(1,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(0,255,0,0)}),
-                counter: new Text({anchor: new Anchor(.5,.5), pos: new Scale2(.5,0,0,1), color: new Color(0,0,0,0), textsize: 10, text: "75/75"})
-            })
-        }),
-        xpbar: new Frame({size: new Scale2(0,48,0,4), pos: new Scale2(1,0,1,-16), anchor: new Anchor(1,1), color: new Color(32,24,48,0)},{
-            inset: new Frame({size: new Scale2(1,-2,1,-2), pos: new Scale2(0.5,0,0.5,0), anchor: new Anchor(0.5,0.5), color: new Color(0,0,0,0)},{
-                bar: new Frame({size: new Scale2(0,0,1,0), pos: new Scale2(0,0,0,0), anchor: new Anchor(0,0), color: new Color(64,0,128,0)}),
-                levels: new Text({anchor: new Anchor(.65,1), size: new Scale2(1,0,0,8), pos: new Scale2(0,0,1,0), textsize: 10, text: "0"})
-            })
-        })
-        //death: new Frame({size: new Scale2(0,128,)})
-    }
-    hud.redraw();
-    let healthbar = hud.children.healthbar.children.inset.children.bar;
-    let hptext = hud.children.healthbar.children.inset.children.counter;
-    let xpbar = hud.children.xpbar.children.inset.children.bar;
-    let leveltext = hud.children.xpbar.children.inset.children.levels;
-    let death = hud.children.death;
-
-    playerEntity.died = () => {
-        playerEntity.invisible = true;
-        playerEntity.inactive = true;
-        playerEntity.deathtimer = 1;
-        Shake(25,2);
-        Shake(50,0.5);
-
-        for (let i=0;i<32;i++) { playerEntity.scraps.emit(); }
-        for (let i=0;i<128;i++) { playerEntity.explode.emit(); }
-
-        //trail0.rate = 0;
-        //trail1.rate = 0;
-        //playerEntity.destroy();
-    }
-
-    playerEntity.scraps = new dustParticleEmitter("Scrap",0,playerEntity,new v2(0,0),scrap,new v2(4,4));
-    playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
-
-    playerEntity.ondamage = (p,dmg,dmgr) => {
-        healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
-        hptext.text = Math.ceil(playerEntity.health * 10) / 10 + "/" + playerEntity.maxhealth;
-        Shake(dmg / 2,0.5);
-        hud.redraw();
-
-        if (!dmgr) { return; }
-        playerEntity.velocity = playerEntity.velocity.add(dmgr.velocity.multiply((dmgr.weight || 1) / playerEntity.weight));
-    }
-    playerEntity.ondamage(playerEntity,0,playerEntity);
-    addxp = (xp,max,levels) => {
-        xpbar.size = new Scale2(xp / max,0,1,0);
-        leveltext.text = levels.toString();
-        hud.redraw();
-    }
 
     SetPlayer(playerEntity);
     SetPlayer2(playerEntity);

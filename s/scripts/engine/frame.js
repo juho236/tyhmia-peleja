@@ -78,6 +78,11 @@ export const CancelFrame = (c) => {
     framecancel = c;
 }
 
+let fpstime = 0;
+let fps = 0;
+
+let fpsCallback = () => {};
+export const SetFPSCallback = c => { fpsCallback = c; }
 const frame = async () => {
     if (!run) { return; }
 
@@ -85,14 +90,22 @@ const frame = async () => {
 
     const t = time();
     const dt = Math.min(0.05,t - lastTime);
-    lastTime = t;
 
     frameTime += dt * frameRate;
     let ticks = maxticks;
+
+    fpstime += t - lastTime;
+    lastTime = t;
+    if (fpstime >= 1) {
+        fpstime -= 1;
+        fpsCallback(fps);
+        fps = 0;
+    }
     while (frameTime >= 1) {
         if (ticks <= 0) { break; }
         frameTime -= 1;
         ticks -= 1;
+        fps ++;
 
         let startTime = time();
         ClearLayer(Layers.Projectiles);

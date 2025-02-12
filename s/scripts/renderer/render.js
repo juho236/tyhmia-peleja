@@ -54,7 +54,12 @@ for (let i=0;i<buffers;i++) {
 }
 
 let shake = 0;
+let shakex = 0;
+let shakey = 0;
 
+export const GetShake = () => {
+    return new v2(shakex,shakey);
+}
 export const Shake = (strength,fade) => {
     shake += strength;
 
@@ -94,5 +99,8 @@ const main = (canvas, d) => {
     d.clearRect(0,0,width,height);
 
     let s = Math.sqrt(Math.max(0,shake));
-    d.drawImage(tripleBuffer[bufferIndex].Buffer,(Math.random() * 2 - 1) * s,(Math.random() * 2 - 1) * s);
+
+    shakex = (Math.random() * 2 - 1) * s;
+    shakey = (Math.random() * 2 - 1) * s;
+    d.drawImage(tripleBuffer[bufferIndex].Buffer,0,0);
 }
