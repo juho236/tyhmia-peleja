@@ -211,19 +211,20 @@ const shop = {
     dmgbasic0: new Upgrade("Stronger lasers","Your ship's lasers will deal an additional 1 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",1); }),
     dmgbasic1: new Upgrade("Laser engine","Unlocks powerful upgrades about laser damage.",new Slots(slotpathes.damage.basic.basic),() => { }),
     dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 2 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",2); }),
-    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 7, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("dmg",7); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
-    dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 5.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-5); AddPower("dmg",4); }),
+    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 9, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("pierce",1); AddPower("dmg",9); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
+    dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 2.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-2); AddPower("dmg",4); }),
+    dmgbasic2: new Upgrade("Laser boost",""),
 
     dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
     dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
-    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 10 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",10); }),
-    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move much slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-300); }),
-    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 30 additional targets, but deals 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",30); AddPower("dmg",-2); }),
+    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 8 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",8); }),
+    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move much slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-200); }),
+    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 16 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",16); AddPower("dmg",-2); }),
 
     dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 1 additional blast per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 1; AddPower("shootspeed",1); AddPower("inaccuracy",0.01); }),
     dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => { }),
     dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 2 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 2; AddPower("shootspeed",2)}),
-    dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 6, but decreases attack damage by 4.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 6; AddPower("shootspeed",6); AddPower("dmg",-4)}),
+    dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 6, but decreases attack damage by 3.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 6; AddPower("shootspeed",6); AddPower("dmg",-3)}),
     dmgspeedsuper: new Upgrade("Minigun","Increases attack speed by 3 at the cost of reduced accuracy.",new Slots(slotpathes.damage.speed.basic.super), () => { player.shootspeed += 3; AddPower("shootspeed",3); AddPower("inaccuracy",0.33); }),
 
     defenseroot: new Upgrade("Defense","Your ship can take an additional 50 hp of damage before getting destroyed. Unlocks the defense path.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
@@ -251,7 +252,7 @@ const shop = {
     utilityspeed1: new Upgrade("Side engines","Your ship will rotate 50% faster. Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
 }
 const mainpathes = [
-    new Path("Damagepath","Root",shop.dmgroot,[
+    new Path("DamagePath","Root",shop.dmgroot,[
         new Path("DamageBasic","Damage",shop.dmgbasic0,[
             new Path("DamageBasic1","DamageStep",shop.dmgbasic1,[
                 new Path("DamageBasicBasic","DamageSuper",shop.dmgbasicbasic,[]),
@@ -260,7 +261,7 @@ const mainpathes = [
             ]),
         ]),
         new Path("DamagePierce","Damage",shop.dmgpierce0,[
-            new Path("Damagepierce1","DamageStep",shop.dmgpierce1,[
+            new Path("DamagePierce1","DamageStep",shop.dmgpierce1,[
                 new Path("DamagePierceBasic","DamageSuper",shop.dmgpiercebasic,[]),
                 new Path("DamagePiercePower","DamageSuper",shop.dmgpiercepower,[]),
                 new Path("DamagePierceSuper","DamageSuper",shop.dmgpiercesuper,[]),
@@ -274,7 +275,7 @@ const mainpathes = [
             ]),
         ]),
     ],true),
-    new Path("Defensepath","Root",shop.defenseroot,[
+    new Path("DefensePath","Root",shop.defenseroot,[
         new Path("DefenseBasic","Defense",shop.defensebasic0,[
             new Path("DefenseBasic1","DefenseStep",shop.defensebasic1,[]),
         ]),
@@ -285,7 +286,7 @@ const mainpathes = [
             new Path("DefenseToughness1","DefenseStep",shop.defensetoughness1,[]),
         ]),
     ],true),
-    new Path("Utilitypath","Root",shop.utilityroot,[
+    new Path("UtilityPath","Root",shop.utilityroot,[
         new Path("UtilityBasic","Utility",shop.utilitybasic0,[
             new Path("UtilityBasic1","UtilityStep",shop.utilitybasic1,[
                 new Path("UtilityBasicBasic","UtilitySuper",shop.utilitybasicbasic,[]),
@@ -510,12 +511,12 @@ const spawn = (x,y,S,textures,texture) => {
     let s = (0.8 + Math.random() * 2);
     e = Add(dt => {
         timer += dt * s;
-        if (timer < 1) { p.frame(dt); p.render(); return; }
+        if (timer < 1) { p.frame(dt); p.render(dt); return; }
         if (!opos) { opos = p.pos; }
         speed += dt * s;
         if (speed < 1) {
             p.pos = opos.lerp(player.pos,speed * speed);
-            p.render();
+            p.render(dt);
             return;
         }
         p.destroy();

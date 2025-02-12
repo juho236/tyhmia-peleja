@@ -46,7 +46,7 @@ export const BlankBuffer = (width, height) => {
     buffer.width = width;
     buffer.height = height;
     const ctx = buffer.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
+    //ctx.imageSmoothingEnabled = false;
 
     return {Buffer: buffer, Draw: ctx};
 }

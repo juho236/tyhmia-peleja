@@ -1,4 +1,4 @@
-let savedata;
+let savedata = {};
 
 export const Load = async () => {
     let localstorage = window.localStorage;
@@ -8,6 +8,7 @@ export const Load = async () => {
         let data = localstorage.getItem("save");
         
         savedata = JSON.parse(data) || {};
+        savedata = {wave: 7, difficulty: 2, score: 75, upgrades: ["DamagePath"]}
         return savedata;
     } catch (err) {
         return false;

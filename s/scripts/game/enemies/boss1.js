@@ -44,7 +44,8 @@ export const boss1 = {
         hardattacks = hardmode;
         impossibleattacks = impossiblemode;
         e.timer = 1;
-        e.weight = 5;
+        e.weight = 14;
+        e.charges = 5;
         e.phase = start;
         e.turnspeed = 3;
         e.laserTextures = laserTextures;
@@ -111,7 +112,7 @@ const shoot = e => {
     
     let rot = e.rot;
     let dir = rot;
-    let speed = 250;
+    let speed = 180;
     let p = 5;
     let d = 15;
     let w = 0.2;
@@ -146,7 +147,7 @@ const going = (e,dt) => {
     turnTo(e,tpos);
     let d = tpos.sub(e.pos).magnitude();
     let s = e.speed * dt;
-    if (s >= d - 128) {
+    if (s >= d - 92) {
         e.phase = think;
         return;
     }
@@ -156,14 +157,11 @@ const going = (e,dt) => {
 }
 
 const think = (e,dt) => {
-    if (!e.thinking) { e.thinking = 1; }
+    if (!e.thinking) { e.thinking = 1; gotorandom(e); return; }
     e.thinking -= dt;
     e.velocity = e.velocity.sub(e.velocity.multiply(dt * 1.1));
     if (e.thinking > 0) { return; }
     e.thinking = undefined;
-
-    let d = player.pos.sub(e.pos).magnitude();
-    if (d > 150) { gotorandom(e); return; }
 
     weightCheck(attacks).ai(e);
 }
@@ -227,7 +225,7 @@ const charging = (e,dt) => {
 
     e.dmg = 1;
     
-    if (Math.random() >= 0.1) { attacks.ram.ai(e); } else { e.phase = think; }
+    if (Math.random() >= 0.1 && e.charges > 0) { e.charges -= 1; attacks.ram.ai(e); } else { e.phase = think; e.charges = 5; }
 }
 
 const gotocenter = (e,dt) => {
