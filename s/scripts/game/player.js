@@ -24,6 +24,8 @@ let power = {
     weight: 0.02,
     sweight: 3,
     inaccuracy: 0.05,
+    homing: 0,
+    latching: 0,
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -263,4 +265,6 @@ const shoot = (playerEntity,dir) => {
     t.pierce = power.pierce;
     t.dmg = power.dmg;
     t.weight = power.weight;
+    t.homing = power.homing;
+    t.latching = power.latching;
 }

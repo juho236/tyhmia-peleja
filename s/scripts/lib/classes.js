@@ -443,6 +443,7 @@ const collision = (entity1, entity2, dt) => {
 
     if (!entity1.unmovable) {
         if (entity2.isProjectile) {
+            if (table.find(entity1.activecollisions,entity2)) { return; }
             entity1.velocity = entity1.velocity.add(vel2.multiply(weight2 / weight1));
         } else {
             let d = entity1.pos.sub(entity2.pos);
@@ -571,6 +572,8 @@ class projectile {
         return -1;
     }
     frame(dt) {
+        if (this.ai) { if (this.ai(dt)) { return; } }
+
         this.lifetime -= dt;
         if (this.lifetime <= 0) { this.destroy(); return; }
         this.pos = this.pos.add(this.velocity.multiply(dt));
@@ -596,9 +599,26 @@ export class LaserProjectile extends projectile {
     }
 
     hit(target) {
+        if (this.latching) {
+            this.latch(target);
+        }
         if (!target.emitters) { return; }
         const emit = new LaserHitParticleEmitter("Laserhit",0,target,new v2(0,0),this.textures2,new v2(9,9));
         for (let i=0;i < 2; i ++) { emit.emit(); }
+    }
+    latch(target) {
+        if (this.latchtarget) { return; }
+        this.latchtarget = target;
+        this.latchtimer = 0;
+    }
+    ai(dt) {
+        if (!this.latchtarget) { return; }
+        if (!this.latchtarget.health || this.latchtarget.destroyed) { return; }
+
+        this.pos = this.latchtarget.pos.add(new v2(Math.random() - 0.5,Math.random() - 0.5).multiply(4));
+        this.latchtimer += dt * this.latching;
+        if (this.latchtimer >= 1) { this.latchtimer -= 1; this.latchtarget.damage(this.dmg,this); this.damage(1,this.latchtarget); }
+        return true;
     }
 }
 export class ExplosionProjectile extends projectile {

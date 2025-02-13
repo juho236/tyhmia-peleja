@@ -1,3 +1,5 @@
+import { PauseGame } from "../game/settings.js";
+import { SetSettingsKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
 import { ClearLayer, Layers } from "../renderer/render.js";
 
@@ -26,11 +28,10 @@ let loaded = false;
 let run = false;
 window.onfocus = () => {
     if (!loaded) { return; }
-    Load();
 }
 window.onblur = () => {
     if (!loaded) { return; } 
-    Unload();
+    PauseGame();
 }
 
 export const Load = () => {
@@ -56,6 +57,7 @@ const waitForFrame = async () => {
 let frameRate = 30;
 export const SetFramerate = fps => {
     frameRate = fps;
+    SetSettingsKey("fps",fps);
 }
 let frameTime = 0;
 
