@@ -104,6 +104,15 @@ const slotpathes = {
         },
         laser: {
             basic: {
+                basic: {
+                    slot: "defense"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "utility"
             },
             slot: "damage"
@@ -213,13 +222,12 @@ const shop = {
     dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 2 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",2); }),
     dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 9, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("pierce",1); AddPower("dmg",9); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
     dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 2.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-2); AddPower("dmg",4); }),
-    //dmgbasic2: new Upgrade("Laser boost",""),
 
     dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
     dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
-    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 8 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",8); }),
-    dmgpiercepower: new Upgrade("∞ pierce","The lasers become unstoppable, but lasers move much slower and deal less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",999999999999); AddPower("laserspeed",-200); }),
-    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 16 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",16); AddPower("dmg",-2); }),
+    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 5 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",5); }),
+    dmgpiercepower: new Upgrade("∞ pierce","Shreds through 15 additional targets, but lasers move much slower and deal much less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",15); AddPower("laserspeed",-200); }),
+    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 8 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",8); AddPower("dmg",-2); }),
 
     dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 1 additional blast per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 1; AddPower("shootspeed",1); AddPower("inaccuracy",0.01); }),
     dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => { }),
@@ -245,9 +253,12 @@ const shop = {
     utilitybasicpower: new Upgrade("XP materializer","Increases laser damage by 2 for every level-up.",new Slots(slotpathes.utility.basic.basic.power),() => { leveldamage += 2; }),
     utilitybasicsuper: new Upgrade("Super XP absorber","Gaining XP will heal 6 hp.",new Slots(slotpathes.utility.basic.basic.super),() => { absorption += 6; }),
 
-    utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.02); }),
-    utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.01); }),
-    
+    utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.03); }),
+    utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.02); }),
+    utilitylaserbasic: new Upgrade("Mean lasers","Greatly increases laser knockback.",new Slots(slotpathes.utility.laser.basic.basic),() => { AddPower("weight",0.07); }),
+    utilitylaserpower: new Upgrade("Tracking lasers","Your lasers will bounce from target to target, but lasers deal 2 less damage. Can hit the same target multiple times.",new Slots(slotpathes.utility.laser.basic.power),() => { AddPower("homing",1); AddPower("dmg",-2); }),
+    utilitylasersuper: new Upgrade("Latching lasers","Latches onto enemies when hit, dealing damage over time.",new Slots(slotpathes.utility.laser.basic.super),() => { AddPower("latching",3); }),
+
     utilityspeed0: new Upgrade("Power engines","Your ship will accelerate twice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
     utilityspeed1: new Upgrade("Side engines","Your ship will rotate 50% faster. Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
 }
@@ -295,7 +306,11 @@ const mainpathes = [
             ]),
         ]),
         new Path("UtilityLaser","Utility",shop.utilitylaser0,[
-            new Path("UtilityLaser1","UtilityStep",shop.utilitylaser1,[]),
+            new Path("UtilityLaser1","UtilityStep",shop.utilitylaser1,[
+                new Path("UtilityLaserBasic","UtilitySuper",shop.utilitylaserbasic,[]),
+                new Path("UtilityLaserPower","UtilitySuper",shop.utilitylaserpower,[]),
+                new Path("UtilityLaserSuper","UtilitySuper",shop.utilitylasersuper,[]),
+            ]),
         ]),
         new Path("UtilitySpeed","Utility",shop.utilityspeed0,[
             new Path("UtilitySpeed1","UtilityStep",shop.utilityspeed1,[]),
@@ -615,7 +630,7 @@ export const SaveScore = async () => {
         SetSaveKey("score",savedScore);
     }
     if (levels) {
-        await toSize(ui, ui.children.bg,new Scale2(0,0,0,0),0.5);
+        await toSize(ui,ui.children.bg,new Scale2(0,0,0,0),0.5);
         ui.children = {};
         ui.redraw();
         Resume();

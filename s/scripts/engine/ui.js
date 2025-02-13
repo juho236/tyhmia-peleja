@@ -251,7 +251,7 @@ const recurse = (c,x,y) => {
 
 export const Load = canvas => {
     AddMouseEvent((x,y) => {
-        if (obj && obj.onleave) { obj.onleave(); } 
+        if (obj && obj.onleave) { obj.onleave(obj); } 
         obj = undefined;
         recurse(uilayers,x,y);
         
@@ -260,11 +260,11 @@ export const Load = canvas => {
             return;
         }
         canvas.style.cursor = "pointer";
-        if (obj.onhover) { obj.onhover(); }
+        if (obj.onhover) { obj.onhover(obj); }
     });
     canvas.onclick = () => {
         if (!obj) { return; }
-        if (obj.onclick) { obj.onclick(); }
+        if (obj.onclick) { obj.onclick(obj); }
     }
 }
 
