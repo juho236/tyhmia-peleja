@@ -54,6 +54,9 @@ const waitForFrame = async () => {
 }
 
 let frameRate = 30;
+export const SetFramerate = fps => {
+    frameRate = fps;
+}
 let frameTime = 0;
 
 let lastTime = time();
@@ -96,7 +99,7 @@ const frame = async () => {
 
     fpstime += t - lastTime;
     lastTime = t;
-    if (fpstime >= 1) {
+    while (fpstime >= 1) {
         fpstime -= 1;
         fpsCallback(fps);
         fps = 0;

@@ -267,3 +267,27 @@ export const Load = canvas => {
         if (obj.onclick) { obj.onclick(); }
     }
 }
+
+
+
+export const toSize = async (ui, bg, target, time) => {
+    let initial = bg.size;
+    let t = 0;
+
+    await new Promise(completed => {
+        let e;
+        e = AddIndependent(dt => {
+            t += dt / time;
+            if (t > 1) {
+                bg.size = target;
+
+                RemoveIndependent(e);
+                completed();
+                return;
+            }
+
+            bg.size = initial.lerp(target,t);
+            ui.redraw();
+        });
+    })
+}

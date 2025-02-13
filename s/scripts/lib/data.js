@@ -1,4 +1,5 @@
 let savedata = {};
+let settingsdata = {};
 
 export const Load = async () => {
     let localstorage = window.localStorage;
@@ -6,9 +7,11 @@ export const Load = async () => {
 
     try {
         let data = localstorage.getItem("save");
-        
+        let settings = localstorage.getItem("settings");
+
         savedata = JSON.parse(data) || {};
-        savedata = {wave: 7, difficulty: 2, score: 75, upgrades: ["DamagePath"]}
+        savedata = {wave: 0, difficulty: 2, score: 0, upgrades: ["DamagePath"]}
+        settingsdata = JSON.parse(settings) || {fps: 30};
         return savedata;
     } catch (err) {
         return false;
@@ -23,4 +26,16 @@ export const SetSaveKey = (key,value) => {
         console.error(err);
         alert("Please enable LocalStorage to save your game");
     }
+}
+export const SetSettingsKey = (key,value) => {
+    settingsdata[key] = value;
+    try {
+        window.localStorage.setItem("settings",JSON.stringify(settingsdata));
+    } catch (err) {
+        console.error(err);
+        alert("Please enable LocalStorage to save your game");
+    }
+}
+export const GetSettings = () => {
+    return settingsdata;
 }

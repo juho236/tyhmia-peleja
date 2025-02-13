@@ -39,6 +39,7 @@ export const Layers = {
     hud: BlankBuffer(width,height),
     shop: BlankBuffer(width,height),
     popup: BlankBuffer(width,height),
+    pause: BlankBuffer(width,height),
 }
 
 export const ClearLayer = layer => {
@@ -93,6 +94,7 @@ const main = (canvas, d) => {
     draw.drawImage(Layers.hud.Buffer,0,0);
     draw.drawImage(Layers.shop.Buffer,0,0);
     draw.drawImage(Layers.popup.Buffer,0,0);
+    draw.drawImage(Layers.pause.Buffer,0,0);
 
     bufferIndex ++;
     if (bufferIndex >= buffers) { bufferIndex = 0; }

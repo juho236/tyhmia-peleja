@@ -1,5 +1,5 @@
 import { Pause, Resume } from "../engine/frame.js";
-import { Anchor, Color, Frame, Scale2, UILayer, Text } from "../engine/ui.js"
+import { Anchor, Color, Frame, Scale2, UILayer, Text, toSize } from "../engine/ui.js"
 import { SetSaveKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
 import { Layers } from "../renderer/render.js";
@@ -16,7 +16,7 @@ let ui;
 export const Load = async (completed,savedata) => {
     ui = new UILayer(Layers.popup);
 
-    new Promise(completed => {
+    new Promise(async completed => {
         if (savedata.difficulty) { completed(options[savedata.difficulty]); return; }
         let c = {};
         let canclick = true;
@@ -54,17 +54,20 @@ export const Load = async (completed,savedata) => {
         });
 
 
-        ui.children = {
-            bg: new Frame({size: new Scale2(0,150,0,60), pos: new Scale2(.5,0,.5,0), anchor: new Anchor(.5,.5), color: new Color(84,82,92,0)},{
-                title: new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(2,0,0,48), anchor: new Anchor(.5,.5), text: "Choose difficulty", textsize: 22}),
-                ...c
-            })
-        }
-        ui.redraw(); 
         Pause();
+        ui.children = {
+            bg: new Frame({pos: new Scale2(.5,0,.5,0), anchor: new Anchor(.5,.5), color: new Color(84,82,92,0)})
+        }
+        await toSize(ui,ui.children.bg,new Scale2(0,150,0,60),0.5);
+        ui.children.bg.children = {
+            title: new Text({pos: new Scale2(.5,0,0,0), size: new Scale2(2,0,0,48), anchor: new Anchor(.5,.5), text: "Choose difficulty", textsize: 22}),
+            ...c
+        }
     }).then(async d => {
-        ui.children = {};
-        ui.redraw();
+        if (ui.children.bg) {
+            ui.children.bg.children = {};
+            await toSize(ui, ui.children.bg,new Scale2(0,0,0,0),0.5);
+        }
 
         SetEnemyDifficulty(d);
         SetScoreDifficulty(d);
