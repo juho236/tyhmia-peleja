@@ -28,6 +28,7 @@ class Star {
     relocate() {
         this.position.y = -2;
         this.position.x = Math.random() * width;
+        this.lastpos = this.position;
     }
 
     frame(dt) {
@@ -39,7 +40,16 @@ class Star {
         this.relocate();
     }
     render(draw) {
-        draw.drawImage(this.buffer.Buffer,Math.round(this.position.x),Math.round(this.position.y));
+        if (this.lastpos) {
+            let p = this.lastpos.sub(this.position).divide(1.5);
+
+            draw.globalAlpha = 0.45;
+            draw.drawImage(this.buffer.Buffer,this.position.x + p.x,this.position.y + p.y);
+            draw.drawImage(this.buffer.Buffer,this.position.x - p.x,this.position.y - p.y);
+            draw.globalAlpha = 0.45;
+        }
+        this.lastpos = this.position;
+        draw.drawImage(this.buffer.Buffer,this.position.x,this.position.y);
     }
 }
 const createStars = texture => {

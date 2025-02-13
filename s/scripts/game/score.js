@@ -1,5 +1,5 @@
 import { Add, AddIndependent, Pause, Remove, RemoveIndependent, Resume } from "../engine/frame.js";
-import { Anchor, Color, Frame, Image, Scale2, Text, UILayer } from "../engine/ui.js";
+import { Anchor, Color, Frame, Image, Scale2, Text, UILayer, toSize } from "../engine/ui.js";
 import { AmbientEntity, v2 } from "../lib/classes.js";
 import { SetSaveKey } from "../lib/data.js";
 import { table } from "../lib/table.js";
@@ -213,7 +213,7 @@ const shop = {
     dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 2 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",2); }),
     dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 9, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("pierce",1); AddPower("dmg",9); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
     dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 2.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-2); AddPower("dmg",4); }),
-    dmgbasic2: new Upgrade("Laser boost",""),
+    //dmgbasic2: new Upgrade("Laser boost",""),
 
     dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
     dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
@@ -307,27 +307,7 @@ let savedupgrades = [];
 let ui;
 let slotTextures;
 
-const tsize = async (bg, target) => {
-    let initial = bg.size;
-    let t = 0;
 
-    await new Promise(completed => {
-        let e;
-        e = AddIndependent(dt => {
-            t += dt * 2;
-            if (t > 1) {
-                bg.size = target;
-
-                RemoveIndependent(e);
-                completed();
-                return;
-            }
-
-            bg.size = initial.lerp(target,t);
-            ui.redraw();
-        });
-    })
-}
 
 const weightCheck = array => {
     if (!array) { return 0; }
@@ -425,7 +405,7 @@ const promptPurchase = async completed => {
     table.iterate(options, option => { if (!option) { return; } opts ++; });
     if (opts <= 0) { completed(); return; }
 
-    await tsize(bg,target);
+    await toSize(ui, bg,target,0.5);
     await new Promise(completed => {
         let c = {};
         let canclick = true;
@@ -635,7 +615,7 @@ export const SaveScore = async () => {
         SetSaveKey("score",savedScore);
     }
     if (levels) {
-        await tsize(ui.children.bg,new Scale2(0,0,0,0));
+        await toSize(ui, ui.children.bg,new Scale2(0,0,0,0),0.5);
         ui.children = {};
         ui.redraw();
         Resume();

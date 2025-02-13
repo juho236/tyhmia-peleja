@@ -7,8 +7,9 @@ import { SetSpeed } from "./background.js";
 import { BindToKeyDown, BindToKeyUp } from "../engine/input.js";
 import { LoadWave, SetPlayer } from "./enemies.js";
 import { SetPlayer as SetPlayer2 } from "./score.js";
-import { UILayer, Frame, Text, Scale2, Anchor, Color } from "../engine/ui.js";
+import { UILayer, Frame, Text, Scale2, Anchor, Color, Image } from "../engine/ui.js";
 import { LoadScore } from "./score.js";
+import { PauseGame } from "./settings.js";
 
 let power = {
     maxhealth: 75,
@@ -114,6 +115,7 @@ export const Load = async () => {
     BindToKeyUp("s",() => { playerEntity.down = false; });
 
     BindToKeyUp("r",() => { if (playerEntity.deathtimer && playerEntity.deathtimer <= 0) { remove(); } })
+    BindToKeyDown("escape",() => { PauseGame(); });
 
     const remove = () => {
         CancelFrame(async () => { playerEntity.destroy(); await Load(); });
@@ -139,6 +141,7 @@ export const Load = async () => {
                 levels: new Text({anchor: new Anchor(.65,1), size: new Scale2(1,0,0,8), pos: new Scale2(0,0,1,0), textsize: 10, text: "0"})
             })
         }),
+        settingsicon: new Image({size: new Scale2(0,25,0,12), pos: new Scale2(0,2,0,2), image: await TextureBuffer(await LoadTexture("assets/pause.png"),25,12)}),
         framerate: new Text({size: new Scale2(0,75,0,16), pos: new Scale2(1,0,0,0), anchor: new Anchor(1,0), textsize: 14, text: "0fps"})
         //death: new Frame({size: new Scale2(0,128,)})
     }
