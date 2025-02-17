@@ -57,15 +57,19 @@ let waves = [
         {id: "enemy",enemy: "lasership",count: 3,time: 10,parallel: true},
         {id: "enemy",enemy: "missile",count: 10,time: 3}
     ]},
-    {pattern:[
+    {pattern: [
         {id: "enemy",enemy: "lasership",count: 20,time: 1}
     ]},
-    {pattern:[
+    {pattern: [
         {id: "enemy",enemy: "meteor",count: 5,time: 5}
     ]},
-    {pattern:[
+    {pattern: [
         {id: "enemy",enemy: "meteor",count: 5,time: 0},
         {id: "enemy",enemy: "lasership",count: 2,time: 10},
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "tinymeteor",count: 500,time: 0.1,parallel: true},
+        {id: "enemy",enemy: "meteor",count: 5,time: 10}
     ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});

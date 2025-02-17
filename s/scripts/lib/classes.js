@@ -561,6 +561,7 @@ class projectile {
         Remove(this.fr);
         table.remove(entities,this);
         this.destroyed = true;
+        if (this.ondestroy) { this.ondestroy(); }
         Destroy(this);
     }
     
@@ -608,10 +609,16 @@ export class LaserProjectile extends projectile {
     }
     latch(target) {
         if (this.latchtarget) { return; }
+        if (target.latchtargets && target.latchtargets >= 2) { return; }
         this.latchtarget = target;
         this.latchtimer = 0;
+        target.latchtargets = (target.latchtargets && target.latchtargets + 1) || 1;
+    }
+    home(dt) {
+
     }
     ai(dt) {
+        if (this.homing && !this.latchtarget) { this.home(dt); }
         if (!this.latchtarget) { return; }
         if (!this.latchtarget.health || this.latchtarget.destroyed) { return; }
 
@@ -619,6 +626,10 @@ export class LaserProjectile extends projectile {
         this.latchtimer += dt * this.latching;
         if (this.latchtimer >= 1) { this.latchtimer -= 1; this.latchtarget.damage(this.dmg,this); this.damage(1,this.latchtarget); }
         return true;
+    }
+    ondestroy() {
+        if (!this.latchtarget) { return; }
+        this.latchtarget.latchtargets -= 1;
     }
 }
 export class ExplosionProjectile extends projectile {
