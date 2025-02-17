@@ -546,8 +546,9 @@ class projectile {
         this.velocity = velocity;
         this.size = size;
         this.hitbox = hitbox;
-        this.rot = Math.atan2(-velocity.x,velocity.y);
+        this.rot = Math.atan2(velocity.x,-velocity.y);
         this.pierce = 0;
+        this.trot = this.rot;
 
         this.fr = Add(dt => {
             this.frame(dt);
@@ -615,7 +616,33 @@ export class LaserProjectile extends projectile {
         target.latchtargets = (target.latchtargets && target.latchtargets + 1) || 1;
     }
     home(dt) {
+        if (!this.target || this.target.destroyed || !this.target.health || this.target.inactive) {
+            let d = Infinity;
+            this.target = false;
+            table.iterate(entities,entity => {
+                if (!entity) { return; }
+                let dis = entity.pos.sub(this.pos).magnitude();
+                if (dis > 75) { return; }
+                if (dis >= d) { return; }
+                if (entity.isProjectile) { return; }
+                if (entity.group == this.group) { return; }
+                if (entity.destroyed || !entity.health || entity.inactive) { return; }
 
+                d = dis;
+                this.target = entity;
+            });
+        }
+
+        this.rot = TurnTowards(this.rot,this.trot,dt * 7);
+        if (this.rot != this.rot) { this.rot = 0; }
+        const rot = this.rot;
+
+        let m = this.velocity.magnitude();
+        this.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(m);
+        if (!this.target || !this.target.pos) { return; }
+
+        const dir = this.target.pos.sub(this.pos);
+        this.trot = Math.atan2(dir.x,-dir.y);
     }
     ai(dt) {
         if (this.homing && !this.latchtarget) { this.home(dt); }
