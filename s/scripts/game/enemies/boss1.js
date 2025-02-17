@@ -7,7 +7,7 @@ let impossibleattacks;
 
 let player;
 let attacks = {
-    ram: {weight: 1, ai: (e) => {
+    ram: {weight: 10, ai: (e) => {
         e.timer = 1;
         if (hardattacks) { e.timer -= 0.2; }
         if (impossibleattacks) { e.timer -= 0.2; }
@@ -20,7 +20,7 @@ let attacks = {
         e.phase = chargeback;
         e.turnspeed = 10;
         e.velocity = new v2(0,0);
-    }}, chase: {weight: 100, ai: e => {
+    }}, chase: {weight: 0, ai: e => {
         e.turnspeed = 2;
         e.timer = 10 + Math.random() * 10;
         e.phase = chase;

@@ -36,7 +36,9 @@ let lasertextures2;
 let playerEntity;
 export const SetPlayerDifficulty = diff => {
     power.damagemultiplier = diff.damagemultiplier;
+    power.defensemultiplier = diff.defensemultiplier;
     playerEntity.damagemultiplier = diff.damagemultiplier;
+    playerEntity.defensemultiplier = diff.defensemultiplier;
 }
 let addxp;
 export const AddXP = (xp,max,levels) => {
@@ -53,6 +55,7 @@ export const Load = async () => {
     playerEntity.group = "player";
     playerEntity.dmg = 40;
     playerEntity.damagemultiplier = power.damagemultiplier;
+    playerEntity.defensemultiplier = power.defensemultiplier;
     playerEntity.texture = playerEntity.textures.default;
     playerEntity.inv = 2;
 
