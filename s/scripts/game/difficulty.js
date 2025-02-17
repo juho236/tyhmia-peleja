@@ -8,8 +8,8 @@ import { SetPlayerDifficulty } from "./player.js";
 import { SetScoreDifficulty } from "./score.js";
 
 const options = [
-    {display: "Easy"},
-    {display: "Medium", healthmultiplier: 1.25, damagemultiplier: 2, hardattacks: true, xpmultiplier: 1.5},
+    {display: "Easy", defensemultiplier: 1/3},
+    {display: "Medium", defensemultiplier: 0.5, healthmultiplier: 1.25, damagemultiplier: 2, hardattacks: true, xpmultiplier: 1.5},
     {display: "Hard", healthmultiplier: 1.333, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, xpmultiplier: 2}
 ]
 let ui;

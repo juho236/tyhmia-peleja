@@ -367,8 +367,8 @@ export class entity {
         this.idamage = dmg;
         if (this.damagemultiplier) { dmg *= this.damagemultiplier; }
 
-        if (this.toughness) { dmg = Math.max(1,dmg - Math.min(this.maxhealth * 0.8,dmg * Math.min(dmg - 5,40) * this.toughness / 180)); }
-        if (this.defense) { dmg = Math.max(1,dmg - this.defense); }
+        if (this.toughness) { dmg = Math.max(1,dmg - dmg * this.toughness / 40); }
+        if (this.defense) { dmg = Math.max(1,dmg - this.defense * (this.defensemultiplier || 1)); }
 
         this.health = Math.max(0,this.health - dmg);
 
@@ -579,10 +579,10 @@ class projectile {
         this.lifetime -= dt;
         if (this.lifetime <= 0) { this.destroy(); return; }
         this.pos = this.pos.add(this.velocity.multiply(dt));
-        if ((this.pos.x < -this.size.x || this.pos.x > width + this.size.x) || (this.pos.y < -this.size.y || this.pos.y > height + this.size.y)) {
-            this.destroy();
-            return;
-        }
+        //if ((this.pos.x < -this.size.x || this.pos.x > width + this.size.x) || (this.pos.y < -this.size.y || this.pos.y > height + this.size.y)) {
+        //    this.destroy();
+        //    return;
+        //}
 
         //collide(this,dt);
     }
@@ -651,7 +651,7 @@ export class LaserProjectile extends projectile {
 
         this.pos = this.latchtarget.pos.add(new v2(Math.random() - 0.5,Math.random() - 0.5).multiply(4));
         this.latchtimer += dt * this.latching;
-        if (this.latchtimer >= 1) { this.latchtimer -= 1; this.latchtarget.damage(this.dmg,this); this.damage(1,this.latchtarget); }
+        if (this.latchtimer >= 1) { this.latchtimer -= 1; this.latchtarget.damage(this.dmg * 2,this); this.damage(1,this.latchtarget); }
         return true;
     }
     ondestroy() {

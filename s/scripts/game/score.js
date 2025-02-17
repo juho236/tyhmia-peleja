@@ -68,18 +68,45 @@ const slotpathes = {
     defense: {
         basic: {
             basic: {
+                basic: {
+                    slot: "defense"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "defense"
             },
             slot: "defense"
         },
         health: {
             basic: {
+                basic: {
+                    slot: "defense"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "defense"
             },
             slot: "damage"
         },
         toughness: {
             basic: {
+                basic: {
+                    slot: "defense"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "defense"
             },
             slot: "utility"
@@ -220,14 +247,14 @@ const shop = {
     dmgbasic0: new Upgrade("Stronger lasers","Your ship's lasers will deal an additional 1 damage.",new Slots(slotpathes.damage.basic),() => { AddPower("dmg",1); }),
     dmgbasic1: new Upgrade("Laser engine","Unlocks powerful upgrades about laser damage.",new Slots(slotpathes.damage.basic.basic),() => { }),
     dmgbasicbasic: new Upgrade("Powerful lasers","Increases laser damage by 2 with no drawbacks.",new Slots(slotpathes.damage.basic.basic.basic),() => { AddPower("dmg",2); }),
-    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 9, but decreases firing speed by 3.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("pierce",1); AddPower("dmg",9); player.shootspeed -= 3; AddPower("shootspeed",-3); }),
+    dmgbasicpower: new Upgrade("Heavy blow","Greatly increases laser damage by 9, but decreases firing speed by 2.",new Slots(slotpathes.damage.basic.basic.power),() => { AddPower("weight",0.1); AddPower("pierce",1); AddPower("dmg",9); player.shootspeed -= 3; AddPower("shootspeed",-2); }),
     dmgbasicsuper: new Upgrade("Power shot","Increases damage by 4 but decreases piercing capabilities by 2.",new Slots(slotpathes.damage.basic.basic.super),() => { AddPower("pierce",-2); AddPower("dmg",4); }),
 
-    dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 3 additional targets.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",3); }),
+    dmgpierce0: new Upgrade("Sharp lasers","Empowers the lasers to pierce through 1 additional target.",new Slots(slotpathes.damage.pierce),() => { AddPower("pierce",1); }),
     dmgpierce1: new Upgrade("Laser sharpener","Lasers pierce through 2 more targets. Unlocks powerful upgrades.",new Slots(slotpathes.damage.pierce.basic),() => { AddPower("pierce",2); }),
-    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 5 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",5); }),
-    dmgpiercepower: new Upgrade("∞ pierce","Shreds through 15 additional targets, but lasers move much slower and deal much less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",15); AddPower("laserspeed",-200); }),
-    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 8 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",8); AddPower("dmg",-2); }),
+    dmgpiercebasic: new Upgrade("Razor sharp lasers","Increases laser pierce by 3 with no drawbacks.",new Slots(slotpathes.damage.pierce.basic.basic),() => { AddPower("pierce",3); }),
+    dmgpiercepower: new Upgrade("∞ pierce","Shreds through 8 additional targets, but lasers move much slower and deal much less knockback.",new Slots(slotpathes.damage.pierce.basic.power),() => { AddPower("pierce",8); AddPower("laserspeed",-200); }),
+    dmgpiercesuper: new Upgrade("Laser shred","Shreds through 5 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",5); AddPower("dmg",-2); }),
 
     dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 1 additional blast per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 1; AddPower("shootspeed",1); AddPower("inaccuracy",0.01); }),
     dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => { }),
@@ -238,7 +265,10 @@ const shop = {
     defenseroot: new Upgrade("Defense","Your ship can take an additional 50 hp of damage before getting destroyed. Unlocks the defense path.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensebasic0: new Upgrade("Hard plates","Adds hard plating to your ship to resist weaker hits. Increases defense by 4",new Slots(slotpathes.defense.basic),() => { player.defense += 4; AddPower("defense",4); }),
     defensebasic1: new Upgrade("Hard frame","Increases defense by 2. Unlocks powerful upgrades.",new Slots(slotpathes.defense.basic.basic),() => { player.defense += 2; AddPower("defense",2); }),
-    
+    defensebasicbasic: new Upgrade("Very hard plates","Increases defense by 4 with no drawbacks.",new Slots(slotpathes.defense.basic.basic.basic),() => { player.defense += 4; AddPower("defense",4); }),
+    defensebasicpower: new Upgrade("Heavy plates","Increases defense by 10, but decreases acceleration by 20%.",new Slots(slotpathes.defense.basic.basic.power),() => { player.defense += 10; AddPower("defense",10); AddPower("acceleration",-1.5); player.acceleration -= 1.5; }),
+    defensebasicsuper: new Upgrade("Diamond plates","Increases defense by 30, but decreases toughness by 3.",new Slots(slotpathes.defense.basic.basic.super),() => { player.defense += 30; AddPower("defense",30); player.toughness -= 3; AddPower("toughness",-3); }),
+
     defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 75 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
     defensehealth1: new Upgrade("Stronger frame","Increases health by 50hp. Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     
@@ -288,7 +318,10 @@ const mainpathes = [
     ],true),
     new Path("DefensePath","Root",shop.defenseroot,[
         new Path("DefenseBasic","Defense",shop.defensebasic0,[
-            new Path("DefenseBasic1","DefenseStep",shop.defensebasic1,[]),
+            new Path("DefenseBasic1","DefenseStep",shop.defensebasic1,[
+                new Path("DefenseBasicBasic","DefenseSuper",shop.defensebasicbasic,[]),
+                new Path("DefenseBasicPower","DefenseSuper",shop.defensebasicpower,[]),
+                new Path("DefenseBasicSuper","DefenseSuper",shop.defensebasicsuper,[]),]),
         ]),
         new Path("DefenseHealth","Defense",shop.defensehealth0,[
             new Path("DefenseHealth1","DefenseStep",shop.defensehealth1,[]),
