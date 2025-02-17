@@ -10,7 +10,7 @@ export const Load = async () => {
         let settings = localstorage.getItem("settings");
 
         savedata = JSON.parse(data) || {};
-        savedata = {wave: 15, difficulty: 2, score: 0, upgrades: ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePiercePower"]}
+        savedata = {wave: 9, difficulty: 2, score: 0, upgrades: ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePiercePower"]}
         settingsdata = JSON.parse(settings) || {fps: 30};
         return savedata;
     } catch (err) {
