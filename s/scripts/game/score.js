@@ -256,7 +256,7 @@ const shop = {
     utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.03); }),
     utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.02); }),
     utilitylaserbasic: new Upgrade("Mean lasers","Greatly increases laser knockback.",new Slots(slotpathes.utility.laser.basic.basic),() => { AddPower("weight",0.07); }),
-    utilitylaserpower: new Upgrade("Tracking lasers","Your lasers will bounce from target to target, but lasers deal 2 less damage. Can hit the same target multiple times.",new Slots(slotpathes.utility.laser.basic.power),() => { AddPower("homing",1); AddPower("dmg",-2); }),
+    utilitylaserpower: new Upgrade("Tracking lasers","Your lasers will bounce from target to target, but lasers deal 2 less damage.",new Slots(slotpathes.utility.laser.basic.power),() => { AddPower("homing",1); AddPower("dmg",-2); }),
     utilitylasersuper: new Upgrade("Latching lasers","Latches onto enemies when hit, dealing damage over time.",new Slots(slotpathes.utility.laser.basic.super),() => { AddPower("latching",3); }),
 
     utilityspeed0: new Upgrade("Power engines","Your ship will accelerate twice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
