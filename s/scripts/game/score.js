@@ -274,7 +274,9 @@ const shop = {
     
     defensetoughness0: new Upgrade("Tough plates","Adds tough plating to your ship to weaken strong hits. Increases toughness by 2",new Slots(slotpathes.defense.toughness),() => { player.toughness += 2; AddPower("toughness",2); }),
     defensetoughness1: new Upgrade("Tough frame","Increases toughness by 1. Unlocks powerful upgrades.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 1; AddPower("toughness",1); }),
-
+    defensetoughnessbasic: new Upgrade("Steel plates","Increases toughness by 2 with no drawbacks.",new Slots(slotpathes.defense.toughness.basic.basic),() => {}),
+    defensetoughnesspower: new Upgrade("","",new Slots(slotpathes.defense.toughness.basic.power),() => {}),
+    defensetoughnesssuper: new Upgrade("","",new Slots(slotpathes.defense.toughness.basic.super),() => {}),
 
     utilityroot: new Upgrade("Utility","XP drops are increased by 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
     utilitybasic0: new Upgrade("XP booster","XP drops are increased by an additional 50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
