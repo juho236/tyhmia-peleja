@@ -14,7 +14,7 @@ export const Load = async () => {
 
         //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePierceSuper"]
         //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicSuper","DamagePierce","UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower"];
-        //savedata.upgrades = ["DefensePath","DefenseBasic","DefenseBasic1","DefenseBasicSuper","DefenseToughness"];
+        savedata.upgrades = ["DefensePath","DefenseToughness","DefenseToughness1","DefenseToughnessBasic","DefenseBasic"];
 
         settingsdata = JSON.parse(settings) || {fps: 30};
         return savedata;
