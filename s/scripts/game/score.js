@@ -257,7 +257,7 @@ const shop = {
     dmgpiercesuper: new Upgrade("Laser shred","Shreds through 5 additional targets, but deal 2 less damage.",new Slots(slotpathes.damage.pierce.basic.super),() => { AddPower("pierce",5); AddPower("dmg",-2); }),
 
     dmgspeed0: new Upgrade("Quick shot","Overclocks the laser receptors to shoot 1 additional blast per second.",new Slots(slotpathes.damage.speed),() => { player.shootspeed += 1; AddPower("shootspeed",1); AddPower("inaccuracy",0.01); }),
-    dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => { }),
+    dmgspeed1: new Upgrade("Power cooler","Unlocks powerful upgrades about laser firing speed.",new Slots(slotpathes.damage.speed.basic),() => {}),
     dmgspeedbasic: new Upgrade("Overclock","Increases attack speed by 2 with no drawbacks.",new Slots(slotpathes.damage.speed.basic.basic), () => { player.shootspeed += 2; AddPower("shootspeed",2)}),
     dmgspeedpower: new Upgrade("Maximum overdrive","Greatly increases attack speed by 6, but decreases attack damage by 3.",new Slots(slotpathes.damage.speed.basic.power), () => { player.shootspeed += 6; AddPower("shootspeed",6); AddPower("dmg",-3)}),
     dmgspeedsuper: new Upgrade("Minigun","Increases attack speed by 3 at the cost of reduced accuracy.",new Slots(slotpathes.damage.speed.basic.super), () => { player.shootspeed += 3; AddPower("shootspeed",3); AddPower("inaccuracy",0.33); }),
@@ -265,18 +265,18 @@ const shop = {
     defenseroot: new Upgrade("Defense","Your ship can take an additional 50 hp of damage before getting destroyed. Unlocks the defense path.",new Slots(slotpathes.defense),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensebasic0: new Upgrade("Hard plates","Adds hard plating to your ship to resist weaker hits. Increases defense by 4",new Slots(slotpathes.defense.basic),() => { player.defense += 4; AddPower("defense",4); }),
     defensebasic1: new Upgrade("Hard frame","Increases defense by 2. Unlocks powerful upgrades.",new Slots(slotpathes.defense.basic.basic),() => { player.defense += 2; AddPower("defense",2); }),
-    defensebasicbasic: new Upgrade("Very hard plates","Increases defense by 4 with no drawbacks.",new Slots(slotpathes.defense.basic.basic.basic),() => { player.defense += 4; AddPower("defense",4); }),
+    defensebasicbasic: new Upgrade("Very hard plates","Increases defense by 6 with no drawbacks.",new Slots(slotpathes.defense.basic.basic.basic),() => { player.defense += 6; AddPower("defense",6); }),
     defensebasicpower: new Upgrade("Heavy plates","Increases defense by 10, but decreases acceleration by 20%.",new Slots(slotpathes.defense.basic.basic.power),() => { player.defense += 10; AddPower("defense",10); AddPower("acceleration",-1.5); player.acceleration -= 1.5; }),
-    defensebasicsuper: new Upgrade("Diamond plates","Increases defense by 30, but decreases toughness by 3.",new Slots(slotpathes.defense.basic.basic.super),() => { player.defense += 30; AddPower("defense",30); player.toughness -= 3; AddPower("toughness",-3); }),
+    defensebasicsuper: new Upgrade("Diamond plates","Increases defense by 28, but decreases toughness by 3.",new Slots(slotpathes.defense.basic.basic.super),() => { player.defense += 28; AddPower("defense",28); player.toughness -= 3; AddPower("toughness",-3); }),
 
     defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 75 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
     defensehealth1: new Upgrade("Stronger frame","Increases health by 50hp. Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     
     defensetoughness0: new Upgrade("Tough plates","Adds tough plating to your ship to weaken strong hits. Increases toughness by 2",new Slots(slotpathes.defense.toughness),() => { player.toughness += 2; AddPower("toughness",2); }),
     defensetoughness1: new Upgrade("Tough frame","Increases toughness by 1. Unlocks powerful upgrades.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 1; AddPower("toughness",1); }),
-    defensetoughnessbasic: new Upgrade("Steel plates","Increases toughness by 2 with no drawbacks.",new Slots(slotpathes.defense.toughness.basic.basic),() => {}),
-    defensetoughnesspower: new Upgrade("","",new Slots(slotpathes.defense.toughness.basic.power),() => {}),
-    defensetoughnesssuper: new Upgrade("","",new Slots(slotpathes.defense.toughness.basic.super),() => {}),
+    defensetoughnessbasic: new Upgrade("Steel plates","Increases toughness by 3 with no drawbacks.",new Slots(slotpathes.defense.toughness.basic.basic),() => { player.toughness += 3; AddPower("toughness",3); }),
+    defensetoughnesspower: new Upgrade("Gold plates","Increases toughness by 8 but decreases defense by 3.",new Slots(slotpathes.defense.toughness.basic.power),() => { player.toughness += 8; AddPower("toughness",8); player.defense -= 3; AddPower("defense",-3); }),
+    defensetoughnesssuper: new Upgrade("Dense plates","Increases toughness by 5 but decreases damage by 2.",new Slots(slotpathes.defense.toughness.basic.super),() => { player.toughness += 5; AddPower("toughness",5); AddPower("dmg",-2); }),
 
     utilityroot: new Upgrade("Utility","XP drops are increased by 25%.",new Slots(slotpathes.utility),() => { xpmultiplier *= 1.25; }),
     utilitybasic0: new Upgrade("XP booster","XP drops are increased by an additional 50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
@@ -323,13 +323,18 @@ const mainpathes = [
             new Path("DefenseBasic1","DefenseStep",shop.defensebasic1,[
                 new Path("DefenseBasicBasic","DefenseSuper",shop.defensebasicbasic,[]),
                 new Path("DefenseBasicPower","DefenseSuper",shop.defensebasicpower,[]),
-                new Path("DefenseBasicSuper","DefenseSuper",shop.defensebasicsuper,[]),]),
+                new Path("DefenseBasicSuper","DefenseSuper",shop.defensebasicsuper,[]),
+            ]),
         ]),
         new Path("DefenseHealth","Defense",shop.defensehealth0,[
             new Path("DefenseHealth1","DefenseStep",shop.defensehealth1,[]),
         ]),
         new Path("DefenseToughness","Defense",shop.defensetoughness0,[
-            new Path("DefenseToughness1","DefenseStep",shop.defensetoughness1,[]),
+            new Path("DefenseToughness1","DefenseStep",shop.defensetoughness1,[
+                new Path("DefenseToughnessBasic","DefenseSuper",shop.defensetoughnessbasic,[]),
+                new Path("DefenseToughnessPower","DefenseSuper",shop.defensetoughnesspower,[]),
+                new Path("DefenseToughnessSuper","DefenseSuper",shop.defensetoughnesssuper,[]),
+            ]),
         ]),
     ],true),
     new Path("UtilityPath","Root",shop.utilityroot,[

@@ -367,8 +367,10 @@ export class entity {
         this.idamage = dmg;
         if (this.damagemultiplier) { dmg *= this.damagemultiplier; }
 
-        if (this.toughness) { dmg = Math.max(1,dmg - dmg * this.toughness / 40); }
+        let odmg = dmg;
+        if (this.toughness) { dmg = Math.max(1,dmg - dmg * this.toughness * (this.defensemultiplier || 1) / 18 + this.toughness / 2); }
         if (this.defense) { dmg = Math.max(1,dmg - this.defense * (this.defensemultiplier || 1)); }
+        if (odmg != dmg) { console.log(odmg,dmg,this.toughness,this.defense); } 
 
         this.health = Math.max(0,this.health - dmg);
 
@@ -622,7 +624,7 @@ export class LaserProjectile extends projectile {
             table.iterate(entities,entity => {
                 if (!entity) { return; }
                 let dis = entity.pos.sub(this.pos).magnitude();
-                if (dis > 75) { return; }
+                if (dis > 150) { return; }
                 if (dis >= d) { return; }
                 if (entity.isProjectile) { return; }
                 if (entity.group == this.group) { return; }
@@ -633,7 +635,7 @@ export class LaserProjectile extends projectile {
             });
         }
 
-        this.rot = TurnTowards(this.rot,this.trot,dt * 7);
+        this.rot = TurnTowards(this.rot,this.trot,dt * 12);
         if (this.rot != this.rot) { this.rot = 0; }
         const rot = this.rot;
 
@@ -667,7 +669,7 @@ export class ExplosionProjectile extends projectile {
         this.pierce = Infinity;
         this.unmovable = true;
         this.weight = 5;
-        this.dmg = 50;
+        this.dmg = 70;
         this.nosamegroup = true;
         this.damagetype = damagetypes.explosion;
 

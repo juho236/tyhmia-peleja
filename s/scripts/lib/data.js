@@ -10,11 +10,15 @@ export const Load = async () => {
         let settings = localstorage.getItem("settings");
 
         savedata = JSON.parse(data) || {};
-        savedata = {wave: 9, difficulty: 0, score: 0};
+        //savedata = {wave: 11, difficulty: 0, score: 0};
 
         //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePierceSuper"]
-        //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicSuper","DamagePierce","UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower"];
-        savedata.upgrades = ["DefensePath","DefenseToughness","DefenseToughness1","DefenseToughnessBasic","DefenseBasic"];
+        //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicSuper","DamagePierce","UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserSuper"];
+        
+        //savedata.upgrades = ["DefensePath","DefenseToughness","DefenseToughness1","DefenseToughnessPower","DefenseBasic"];
+        //savedata.upgrades = ["DefensePath","DefenseBasic","DefenseBasic1","DefenseBasicSuper","DefenseToughness"];
+        
+        //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DefensePath","DefenseToughness","DefenseToughness1","DefenseToughnessPower","DefenseBasic"];
 
         settingsdata = JSON.parse(settings) || {fps: 30};
         return savedata;

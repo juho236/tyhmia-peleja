@@ -316,7 +316,7 @@ const LoadEnemies = () => {
             size: new v2(6,6),
             hitbox: new v2(5,5),
             health: 5,
-            dmg: 2,
+            dmg: 6,
             score: 1,
             oob: true,
             ai: (e, dt) => {
@@ -372,7 +372,7 @@ const LoadEnemies = () => {
             size: new v2(16,16),
             hitbox: new v2(11,11),
             health: 40,
-            dmg: 8,
+            dmg: 15,
             score: 3,
             oob: true,
             spawns: {count: 3, id: "tinymeteor"},
