@@ -28,10 +28,11 @@ let loaded = false;
 let run = false;
 window.onfocus = () => {
     if (!loaded) { return; }
+    Load();
 }
 window.onblur = () => {
     if (!loaded) { return; } 
-    PauseGame();
+    Unload();
 }
 
 export const Load = () => {

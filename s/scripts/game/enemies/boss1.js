@@ -114,7 +114,7 @@ const shoot = e => {
     let dir = rot;
     let speed = 180;
     let p = 5;
-    let d = 15;
+    let d = 25;
     let w = 0.2;
     
     const t1 = new LaserProjectile("Bosslaser","Enemy",e.pos.add(transform(rot,new v2(-24,-18))),new v2(Math.sin(dir),-Math.cos(dir)).multiply(speed),new v2(16,16),new v2(14,14),Layers.Projectiles,e.lasertextures);
@@ -176,7 +176,7 @@ const chase = (e,dt) => {
     let s = 350;
     let d = 0.5;
 
-    e.dmg = 15;
+    e.dmg = 20;
     let epos = e.pos;
     if (hardattacks) {
         s += 70; d += 0.3;
@@ -212,7 +212,7 @@ const chargeback = (e,dt) => {
         e.velocity = e.velocity.add(new v2(-Math.sin(rot),Math.cos(rot)).multiply((1 - e.timer) * dt * 450));
         return;
     }
-    e.dmg = 40;
+    e.dmg = 60;
     e.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(e.chargespeed);
     e.phase = charging;
     e.timer = 0.5;
@@ -234,6 +234,8 @@ const gotocenter = (e,dt) => {
     if (e.timer > 0) { return; }
     e.timer = 8 + Math.random() * 8;
     if (impossibleattacks) { e.timer += 4 + Math.random() * 9; }
+    
+    e.dmg = 500;
     e.phase = center;
 }
 const center = (e,dt) => {
@@ -252,5 +254,6 @@ const center = (e,dt) => {
     e.timer -= dt;
     if (e.timer > 0) { return; }
 
+    e.dmg = 1;
     e.phase = think;
 }
