@@ -1,5 +1,6 @@
 import { Pause, Resume, SetFramerate } from "../engine/frame.js"
 import { Anchor, Color, Frame, Scale2, Text, UILayer, toSize } from "../engine/ui.js";
+import { NewGame } from "../lib/data.js";
 import { Layers } from "../renderer/render.js";
 
 let ui;
@@ -21,7 +22,7 @@ export const PauseGame = async () => {
     
 
     let bg = ui.children.bg;
-    await toSize(ui,bg,new Scale2(0,110,0,46),0.4);
+    await toSize(ui,bg,new Scale2(0,110,0,68),0.4);
     bg.children = {
         title: new Text({size: new Scale2(1,0,0,16), anchor: new Anchor(0,1), textsize: 16, text: "Game Paused"}),
         resume: new Frame({size: new Scale2(1,-4,0,20), pos: new Scale2(0,2,0,2), color: new Color(0,0,0,255),
@@ -42,6 +43,15 @@ export const PauseGame = async () => {
                 ui.redraw();
             }, onclick: OpenSettings
         },{text: new Text({size: new Scale2(1,0,1,0), textsize: 16, text: "Settings"})}),
+        newgame: new Frame({size: new Scale2(1,-4,0,20), pos: new Scale2(0,2,0,46), color: new Color(0,0,0,255),
+            onhover: f => {
+                f.color = new Color(0,0,0,192);
+                ui.redraw();
+            }, onleave: f => {
+                f.color = new Color(0,0,0,255);
+                ui.redraw();
+            }, onclick: NewGame
+        },{text: new Text({size: new Scale2(1,0,1,0), textsize: 16, text: "New game"})}),
     }
     animation = false;
     ui.redraw();

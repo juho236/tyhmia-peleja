@@ -11,7 +11,7 @@ const options = [
     {display: "Easy", desc: "Standard difficulty. XP drops are reduced and enemies move slower. Defense is less effective.", defensemultiplier: 1/3},
     {display: "Medium", desc: "The standard experience.", defensemultiplier: 0.5, healthmultiplier: 1.25, damagemultiplier: 1.5, hardattacks: true, xpmultiplier: 1.5},
     {display: "Hard", desc: "The intended experience. XP drops are increased and enemies move faster. Defense is more effective.", healthmultiplier: 1.333, damagemultiplier: 2, hardattacks: true, impossibleattacks: true, xpmultiplier: 2},
-    {display: "Nightmare", desc: "Hard too easy for you?", healthmultiplier: 1, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, nightmareattacks: true}
+    {display: "Nightmare", desc: "Hard too easy for you?", defensemultiplier: 1.1, healthmultiplier: 1, damagemultiplier: 3, hardattacks: true, impossibleattacks: true, nightmareattacks: true}
 ]
 let ui;
 export const Load = async (completed,savedata) => {

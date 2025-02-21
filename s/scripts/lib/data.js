@@ -10,7 +10,7 @@ export const Load = async () => {
         let settings = localstorage.getItem("settings");
 
         savedata = JSON.parse(data) || {};
-        savedata = {wave: 9, difficulty: 3, score: 0};
+        //savedata = {wave: 12, difficulty: 3, score: 0};
 
         //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePierceSuper"]
         //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicSuper","DamagePierce","UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserSuper"];
@@ -21,14 +21,19 @@ export const Load = async () => {
         //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DefensePath","DefenseToughness","DefenseToughness1","DefenseToughnessPower","DefenseBasic"];
 
         //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicBasic","DamageSpeed","DefensePath","DefenseBasic","DefenseHealth","DefenseHealth1","DefenseHealthSuper"];
-        savedata.upgrades = ["UtilityPath","UtilitySpeed","UtilitySpeed1"];
-
+        //savedata.upgrades = ["UtilityPath","UtilitySpeed","UtilitySpeed1","UtilitySpeedSuper","DefensePath","DefenseBasic","DefenseToughness","DefenseToughness1","DefenseToughnessBasic"];
+        //savedata.upgrades = ["NoUpgrade0","NoUpgrade1","NoUpgrade2","NoUpgrade3","NoUpgrade4","NoUpgrade5","FinalUpgrade"];
 
         settingsdata = JSON.parse(settings) || {fps: 30};
         return savedata;
     } catch (err) {
         return false;
     }
+}
+
+export const NewGame = () => {
+    if (window.localStorage) { window.localStorage.clear(); }
+    window.location.reload();
 }
 
 export const SetSaveKey = (key,value) => {
