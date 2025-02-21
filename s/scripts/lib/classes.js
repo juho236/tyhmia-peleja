@@ -376,12 +376,14 @@ export class entity {
 
         if (this.ondamage) { this.ondamage(this,dmg,damager); }
         if (this.health <= 0) {
+            this.dead = true;
             if (this.score) { AddScore(this.score,this.pos.x,this.pos.y); }
             if (this.deathEffect) { await this.deathEffect(this); }
             this.died();
         }
     }
     heal(heal) {
+        if (this.health <= 0) { return; }
         this.health = Math.min(this.maxhealth,this.health + heal);
         if (this.ondamage) { this.ondamage(this,-heal); }
     }
@@ -398,6 +400,7 @@ export class entity {
         if (this.flash) { this.flash -= dt; if (this.flash <= 0) { this.flash = null; }}
         if (this.iframes) { this.iframes -= dt; if (this.iframes <= 0) { this.iframes = null; this.buffer.Draw.globalAlpha = 1; }}
         if (this.destroyed) { return; }
+        if (this.regen) { this.heal(this.regen * dt); }
         
         this.pos = this.pos.add(this.velocity.multiply(dt));
         if (!this.oob) { this.pos = this.pos.clamp(new v2(0,0), new v2(width, height)); }
@@ -569,6 +572,7 @@ class projectile {
     }
     
     damage(dmg,target) {
+        if (this.leech) { this.leechtarget.heal(this.dmg * this.leech); }
         this.hit(target);
         this.pierce -= 1;
         if (this.pierce >= 0) { return; }
@@ -624,7 +628,7 @@ export class LaserProjectile extends projectile {
             table.iterate(entities,entity => {
                 if (!entity) { return; }
                 let dis = entity.pos.sub(this.pos).magnitude();
-                if (dis > 150) { return; }
+                //if (dis > 150) { return; }
                 if (dis >= d) { return; }
                 if (entity.isProjectile) { return; }
                 if (entity.group == this.group) { return; }
@@ -635,7 +639,7 @@ export class LaserProjectile extends projectile {
             });
         }
 
-        this.rot = TurnTowards(this.rot,this.trot,dt * 12);
+        this.rot = TurnTowards(this.rot,this.trot,dt * 12 * this.homing);
         if (this.rot != this.rot) { this.rot = 0; }
         const rot = this.rot;
 
