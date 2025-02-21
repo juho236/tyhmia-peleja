@@ -28,6 +28,7 @@ let power = {
     latching: 0,
     regen: 0,
     leech: 0,
+    contactdamage: 50,
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -55,7 +56,7 @@ export const Load = async () => {
         }
     ),16,16));
     playerEntity.group = "player";
-    playerEntity.dmg = 40;
+    playerEntity.dmg = power.contactdamage;
     playerEntity.regen = power.regen;
     playerEntity.damagemultiplier = power.damagemultiplier;
     playerEntity.defensemultiplier = power.defensemultiplier;
@@ -277,7 +278,7 @@ const shoot = (playerEntity,dir) => {
 
     
     t.pierce = power.pierce;
-    t.dmg = power.dmg;
+    t.dmg = Math.max(1,power.dmg);
     t.weight = power.weight;
     t.homing = power.homing;
     t.latching = power.latching;

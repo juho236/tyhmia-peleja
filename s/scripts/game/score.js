@@ -223,6 +223,7 @@ class Path {
         if (unlocked) { this.unlock(); }
     }
     remove() {
+        if (!availablePathes[this.priority]) { availablePathes[this.priority] = []; }
         table.remove(availablePathes[this.priority],this);
         if (!unlockedPathes[this.path]) { unlockedPathes[this.path] = 1; return; }
         unlockedPathes[this.path]++;
@@ -282,7 +283,7 @@ const shop = {
     defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 50 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
     defensehealth1: new Upgrade("Stronger frame","Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { }),
     defensehealthbasic: new Upgrade("Energy shield","Increases health by 50 hp with no drawbacks.",new Slots(slotpathes.defense.health.basic.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
-    defensehealthpower: new Upgrade("Steel growth","Regenerates 3 hp per second, but decreases health by 25 hp.",new Slots(slotpathes.defense.health.basic.power),() => { player.health -= 25; player.maxhealth -= 25; AddPower("maxhealth",-25); player.regen += 3; AddPower("regen",3);}),
+    defensehealthpower: new Upgrade("Steel growth","Regenerates 3 hp per second, but decreases health by 25 hp.",new Slots(slotpathes.defense.health.basic.power),() => { player.health -= 25; player.maxhealth -= 25; AddPower("maxhealth",-25); player.regen += 3; AddPower("regen",3); }),
     defensehealthsuper: new Upgrade("Scrap repurpose","Instantly regenerates 2% of damage dealt to enemies. Scales with attack damage.",new Slots(slotpathes.defense.health.basic.super),() => { AddPower("leech",0.02); }),
 
     defensetoughness0: new Upgrade("Tough plates","Adds tough plating to your ship to weaken strong hits. Increases toughness by 2",new Slots(slotpathes.defense.toughness),() => { player.toughness += 2; AddPower("toughness",2); }),
@@ -304,11 +305,21 @@ const shop = {
     utilitylaserpower: new Upgrade("Tracking lasers","Your lasers will bounce from target to target, but lasers deal 2 less damage.",new Slots(slotpathes.utility.laser.basic.power),() => { AddPower("homing",1); AddPower("dmg",-2); }),
     utilitylasersuper: new Upgrade("Latching lasers","Latches onto enemies when hit, dealing damage over time.",new Slots(slotpathes.utility.laser.basic.super),() => { AddPower("latching",3); }),
 
-    utilityspeed0: new Upgrade("Power engines","Your ship will accelerate twice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
-    utilityspeed1: new Upgrade("Side engines","Your ship will rotate 50% faster. Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
-    utilityspeedbasic: new Upgrade("Cursed Damage","Increases damage by 10, pierce by 5, but decreases hp to 1.",new Slots(slotpathes.utility.speed.basic.basic),() => { player.health += -9999; player.maxhealth += -9999; AddPower("maxhealth",-9999); AddPower("dmg",10); AddPower("pierce",5); }),
-    utilityspeedpower: new Upgrade("","",new Slots(slotpathes.utility.speed.basic.power),() => {}),
-    utilityspeedsuper: new Upgrade("","",new Slots(slotpathes.utility.speed.basic.super),() => {}),
+    utilityspeed0: new Upgrade("Power engines","Stepping stone for greater upgrades.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 1; AddPower("acceleration",1); }),
+    utilityspeed1: new Upgrade("Side engines","Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
+    utilityspeedbasic: new Upgrade("Cursed Damage","Increases damage by 10 and pierce by 5, but decreases hp to 1.",new Slots(slotpathes.utility.speed.basic.basic),() => { player.health += -9999; player.maxhealth += -9999; AddPower("maxhealth",-9999); AddPower("dmg",10); AddPower("pierce",5); }),
+    utilityspeedpower: new Upgrade("Cursed Defense","Increases defense by 10, toughness by 3, contact damage by 50, regeneration by 3 hp/s and health by 500 hp, but disables lasers completely.",new Slots(slotpathes.utility.speed.basic.power),() => {
+        player.defense += 10; AddPower("defense",10); player.toughness += 3; AddPower("toughness",3); player.health += 500; player.maxhealth += 500; AddPower("maxhealth",500); player.shootspeed -= 9999; AddPower("shootspeed",-9999); player.regen += 3; AddPower("regen",3); player.dmg += 50; AddPower("contactdamage",50); 
+    }),
+    utilityspeedsuper: new Upgrade("No Upgrade","There is no upgrade.",new Slots(slotpathes.utility.speed.basic.super),() => {}),
+
+    noupgrade: new Upgrade("No upgrade","There is no upgrade.",new Slots(slotpathes),() => {}),
+    noupgrade1: new Upgrade("No upgrade","No upgrade.",new Slots(slotpathes),() => {}),
+    noupgrade2: new Upgrade("No upgrade","No upgrade here.",new Slots(slotpathes),() => {}),
+    noupgrade3: new Upgrade("No upgrade","0 upgrades here.",new Slots(slotpathes),() => { player.health += -9999; player.maxhealth += -9999; AddPower("maxhealth",-9999); }),
+    noupgrade4: new Upgrade("Downgrade","Stop it.",new Slots(slotpathes),() => { AddPower("dmg",-2); AddPower("pierce",-3); }),
+    noupgrade5: new Upgrade("Big downgrade","Big downgrade.",new Slots(slotpathes),() => { AddPower("dmg",-3); AddPower("pierce",-9999); }),
+    finalupgrade: new Upgrade("Total shred","Shred through your enemies with ease.",new Slots(slotpathes),() => { AddPower("dmg",100); }),
 }
 const mainpathes = [
     new Path("DamagePath","Root",shop.dmgroot,[
@@ -376,7 +387,21 @@ const mainpathes = [
             new Path("UtilitySpeed1","UtilityStep",shop.utilityspeed1,[
                 new Path("UtilitySpeedBasic","UtilitySuper",shop.utilityspeedbasic,[]),
                 new Path("UtilitySpeedPower","UtilitySuper",shop.utilityspeedpower,[]),
-                new Path("UtilitySpeedSuper","UtilitySuper",shop.utilityspeedsuper,[]),
+                new Path("UtilitySpeedSuper","UtilitySuper",shop.utilityspeedsuper,[
+                    new Path("NoUpgrade0","NoUpgrade0",shop.noupgrade,[
+                        new Path("NoUpgrade1","NoUpgrade1",shop.noupgrade1,[
+                            new Path("NoUpgrade2","NoUpgrade2",shop.noupgrade2,[
+                                new Path("NoUpgrade3","NoUpgrade3",shop.noupgrade3,[
+                                    new Path("NoUpgrade4","NoUpgrade4",shop.noupgrade4,[
+                                        new Path("NoUpgrade5","NoUpgrade5",shop.noupgrade5,[
+                                            new Path("FinalUpgrade","FinalUpgrade",shop.finalupgrade,[]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ]),
             ]),
         ]),
     ],true),
