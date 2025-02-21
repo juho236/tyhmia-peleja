@@ -26,6 +26,8 @@ let power = {
     inaccuracy: 0.05,
     homing: 0,
     latching: 0,
+    regen: 0,
+    leech: 0,
 }
 export const AddPower = (key, value) => {
     power[key] += value;
@@ -54,6 +56,7 @@ export const Load = async () => {
     ),16,16));
     playerEntity.group = "player";
     playerEntity.dmg = 40;
+    playerEntity.regen = power.regen;
     playerEntity.damagemultiplier = power.damagemultiplier;
     playerEntity.defensemultiplier = power.defensemultiplier;
     playerEntity.texture = playerEntity.textures.default;
@@ -178,15 +181,22 @@ export const Load = async () => {
     playerEntity.scraps = new dustParticleEmitter("Scrap",0,playerEntity,new v2(0,0),scrap,new v2(4,4));
     playerEntity.explode = new fireParticleEmitter("Explode",0,playerEntity,new v2(0,0),explode,new v2(5,5));
 
-    playerEntity.ondamage = (p,dmg,dmgr) => {
+    const drawhp = () => {
+        if (playerEntity.dead) {
+            healthbar.size = new Scale2(0,0,1,0);
+            hptext.text = "dead";
+            return;
+        }
         healthbar.size = new Scale2(playerEntity.health / playerEntity.maxhealth,0,1,0);
-        hptext.text = Math.ceil(playerEntity.health * 10) / 10 + "/" + playerEntity.maxhealth;
+        hptext.text = Math.max(1,Math.ceil(playerEntity.health * 10) / 10) + "/" + Math.max(1,playerEntity.maxhealth);
+    }
+
+    playerEntity.ondamage = (p,dmg,dmgr) => {
         Shake(dmg / 2,0.5);
 
         if (!dmgr) { return; }
         playerEntity.velocity = playerEntity.velocity.add(dmgr.velocity.multiply((dmgr.weight || 1) / playerEntity.weight));
     }
-    playerEntity.ondamage(playerEntity,0,playerEntity);
     addxp = (xp,max,levels) => {
         xpbar.size = new Scale2(xp / max,0,1,0);
         leveltext.text = levels.toString();
@@ -218,6 +228,7 @@ export const Load = async () => {
         playerEntity.frame(dt);
         playerEntity.render(dt);
         
+        drawhp();
         hud.redraw();
     });
 
@@ -270,4 +281,6 @@ const shoot = (playerEntity,dir) => {
     t.weight = power.weight;
     t.homing = power.homing;
     t.latching = power.latching;
+    t.leech = power.leech;
+    t.leechtarget = playerEntity;
 }

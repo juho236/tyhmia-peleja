@@ -51,7 +51,7 @@ let waves = [
         {id: "enemy",enemy: "boss1",count: 1,time: 0}
     ]},
     {pattern: [
-        {id: "enemy",enemy: "lasership",count: 2,time: 20},
+        {id: "enemy",enemy: "lasership",count: 2,time: 8},
     ]},
     {pattern: [
         {id: "enemy",enemy: "lasership",count: 3,time: 10,parallel: true},
@@ -70,6 +70,16 @@ let waves = [
     {pattern: [
         {id: "enemy",enemy: "tinymeteor",count: 500,time: 0.1,parallel: true},
         {id: "enemy",enemy: "meteor",count: 5,time: 10}
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "smallmeteor",count: 50,time: 0.1},
+        {id: "waitAll"},
+        {id: "enemy",enemy: "smallmeteor",count: 40,time: 0.1},
+        {id: "enemy",enemy: "tinymeteor",count: 20,time: 0.1},
+        {id: "waitAll"},
+        {id: "enemy",enemy: "smallmeteor",count: 20,time: 0.1},
+        {id: "enemy",enemy: "tinymeteor",count: 100,time: 0.1},
+        {id: "waitAll"}
     ]}
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -101,6 +111,7 @@ let enemyCount = 0;
 let enemies;
 let hardattacks;
 let impossibleattacks;
+let nightmareattacks;
 
 const LoadEnemies = () => {
     enemies = {
@@ -190,7 +201,7 @@ const LoadEnemies = () => {
             load: e => {
                 e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
                 e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
-                boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures,hardattacks,impossibleattacks);
+                boss1.load(e,player,enemies.laser.textures,enemies.laserprojectile.textures,hardattacks,impossibleattacks,nightmareattacks);
             },
             ai: (e, dt) => {
                 if (e.removetimer) {
@@ -420,7 +431,7 @@ const LoadEnemies = () => {
                     const rot = a * Math.PI * 2;
                     spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
                     spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
-                    spawn.iframes = 0.25;
+                    //spawn.iframes = 0.25;
                 }
                 e.invisible = true;
                 e.removetimer = 4;
@@ -487,7 +498,7 @@ const LoadEnemies = () => {
                     const rot = a * Math.PI * 2;
                     spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
                     spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(120).add(e.velocity);
-                    spawn.iframes = 0.25;
+                    //spawn.iframes = 0.25;
                 }
                 s = 12;
                 b = Math.random();
@@ -498,7 +509,7 @@ const LoadEnemies = () => {
                     const rot = a * Math.PI * 2;
                     spawn.pos = e.pos.add(new v2(Math.sin(rot),-Math.cos(rot)).multiply(5));
                     spawn.velocity = new v2(Math.sin(rot),-Math.cos(rot)).multiply(60).add(e.velocity);
-                    spawn.iframes = 0.25;
+                    //spawn.iframes = 0.25;
                 }
                 e.invisible = true;
                 e.removetimer = 4;
@@ -517,6 +528,7 @@ export const SetEnemyDifficulty = diff => {
     hpmultiplier = diff.healthmultiplier;
     hardattacks = diff.hardattacks;
     impossibleattacks = diff.impossibleattacks;
+    nightmareattacks = diff.nightmareattacks;
 }
 const spawnEnemy = id => {
     enemyCount += 1;

@@ -4,6 +4,7 @@ import { Layers, Shake, height, width } from "../../renderer/render.js";
 
 let hardattacks;
 let impossibleattacks;
+let nightmareattacks;
 
 let player;
 let attacks = {
@@ -13,6 +14,7 @@ let attacks = {
         if (impossibleattacks) { e.timer -= 0.2; }
         e.chargespeed = 450 + Math.random() * 85;
         if (hardattacks) { e.chargespeed -= 40 + Math.random() * 54; }
+        if (nightmareattacks) { e.timer -= 0.05; }
         
         let t = player.pos.sub(e.pos).magnitude() / e.chargespeed;
         t += Math.sqrt(t) / 3;
@@ -23,15 +25,21 @@ let attacks = {
     }}, chase: {weight: 0, ai: e => {
         e.turnspeed = 2;
         e.timer = 10 + Math.random() * 10;
+        if (nightmareattacks) {
+            e.timer = 5;
+        }
         e.phase = chase;
-    }}, center: {weight: 1, ai: e => {
+    }}, center: {weight: 1000, ai: e => {
         e.timer = 1;
         e.rotspeed = 1;
         if (hardattacks) {
-            e.rotspeed = 3;
+            e.rotspeed += 2;
         }
         if (impossibleattacks) {
             e.rotspeed += 2;
+        }
+        if (nightmareattacks) {
+            e.rotspeed += 6;
         }
 
         e.spos = e.pos;
@@ -40,8 +48,9 @@ let attacks = {
 };
 
 export const boss1 = {
-    load: (e,plr,laserTextures,lasertextures,hardmode,impossiblemode) => {
+    load: (e,plr,laserTextures,lasertextures,hardmode,impossiblemode,nightmaremode) => {
         hardattacks = hardmode;
+        nightmareattacks = nightmaremode;
         impossibleattacks = impossiblemode;
         e.timer = 1;
         e.weight = 14;
@@ -116,6 +125,8 @@ const shoot = e => {
     let p = 5;
     let d = 25;
     let w = 0.2;
+
+    if (nightmareattacks) { speed -= 30; }
     
     const t1 = new LaserProjectile("Bosslaser","Enemy",e.pos.add(transform(rot,new v2(-24,-18))),new v2(Math.sin(dir),-Math.cos(dir)).multiply(speed),new v2(16,16),new v2(14,14),Layers.Projectiles,e.lasertextures);
     t1.texture = t1.textures.default;
@@ -140,6 +151,8 @@ const start = (e,dt) => {
 
 const gotorandom = e => {
     e.speed = 115 + Math.random() * 35;
+    if (hardattacks) { e.speed += 20; }
+    if (nightmareattacks) { e.speed += 120; }
     e.phase = going; 
 }
 const going = (e,dt) => {
@@ -181,6 +194,11 @@ const chase = (e,dt) => {
     if (hardattacks) {
         s += 70; d += 0.3;
         e.dmg += 3;
+        if (impossibleattacks) {
+            e.dmg += 2;
+            s += 50;
+            d += 0.2;
+        }
         
         t = player.pos.sub(e.pos).magnitude() / (e.velocity.magnitude() + s);
     } else {
@@ -218,6 +236,7 @@ const chargeback = (e,dt) => {
     e.timer = 0.5;
     if (hardattacks) { e.timer += 0.2; }
     if (impossibleattacks) { e.timer += 0.1;}
+    if (nightmareattacks) { e.timer -= 0.4; }
 }
 const charging = (e,dt) => {
     e.timer -= dt;
@@ -230,10 +249,12 @@ const charging = (e,dt) => {
 
 const gotocenter = (e,dt) => {
     e.timer -= dt;
+    if (nightmareattacks) { e.timer -= dt; }
     e.pos = e.spos.lerp(new v2(width/2,height/2),Math.min(1,1 - e.timer) ** 2);
     if (e.timer > 0) { return; }
     e.timer = 8 + Math.random() * 8;
     if (impossibleattacks) { e.timer += 4 + Math.random() * 9; }
+    if (nightmareattacks) { e.timer = 3; }
     
     e.dmg = 500;
     e.phase = center;
@@ -248,6 +269,7 @@ const center = (e,dt) => {
     let s = 10;
     if (hardattacks) { s -= 3; }
     if (impossibleattacks) { s += 2;}
+    if (nightmareattacks) { s += 8;}
     e.shootspeed += dt * s;
     if (e.shootspeed > 0) { e.shootspeed -= 1; shoot(e); }
 

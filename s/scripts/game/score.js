@@ -146,6 +146,15 @@ const slotpathes = {
         },
         speed: {
             basic: {
+                basic: {
+                    slot: "defense"
+                },
+                power: {
+                    slot: "damage"
+                },
+                super: {
+                    slot: "utility"
+                },
                 slot: "utility"
             },
             slot: "defense"
@@ -236,6 +245,7 @@ let freelevel = 0;
 let freelevels = 0;
 let leveldamage = 0;
 let totalleveldamage = 0;
+let totalabsorption = 0;
 let absorption = 0;
 let maxpaths = 2;
 export const SetScoreDifficulty = diff => {
@@ -269,9 +279,12 @@ const shop = {
     defensebasicpower: new Upgrade("Heavy plates","Increases defense by 10, but decreases acceleration by 20%.",new Slots(slotpathes.defense.basic.basic.power),() => { player.defense += 10; AddPower("defense",10); AddPower("acceleration",-1.5); player.acceleration -= 1.5; }),
     defensebasicsuper: new Upgrade("Diamond plates","Increases defense by 28, but decreases toughness by 3.",new Slots(slotpathes.defense.basic.basic.super),() => { player.defense += 28; AddPower("defense",28); player.toughness -= 3; AddPower("toughness",-3); }),
 
-    defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 75 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 75; player.maxhealth += 75; AddPower("maxhealth",75); }),
-    defensehealth1: new Upgrade("Stronger frame","Increases health by 50hp. Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
-    
+    defensehealth0: new Upgrade("Stronger vitality","Your ship can take an additional 50 hp of damage before getting destroyed.",new Slots(slotpathes.defense.health),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defensehealth1: new Upgrade("Stronger frame","Unlocks powerful upgrades.",new Slots(slotpathes.defense.health.basic),() => { }),
+    defensehealthbasic: new Upgrade("Energy shield","Increases health by 50 hp with no drawbacks.",new Slots(slotpathes.defense.health.basic.basic),() => { player.health += 50; player.maxhealth += 50; AddPower("maxhealth",50); }),
+    defensehealthpower: new Upgrade("Steel growth","Regenerates 3 hp per second, but decreases health by 25 hp.",new Slots(slotpathes.defense.health.basic.power),() => { player.health -= 25; player.maxhealth -= 25; AddPower("maxhealth",-25); player.regen += 3; AddPower("regen",3);}),
+    defensehealthsuper: new Upgrade("Scrap repurpose","Instantly regenerates 2% of damage dealt to enemies. Scales with attack damage.",new Slots(slotpathes.defense.health.basic.super),() => { AddPower("leech",0.02); }),
+
     defensetoughness0: new Upgrade("Tough plates","Adds tough plating to your ship to weaken strong hits. Increases toughness by 2",new Slots(slotpathes.defense.toughness),() => { player.toughness += 2; AddPower("toughness",2); }),
     defensetoughness1: new Upgrade("Tough frame","Increases toughness by 1. Unlocks powerful upgrades.",new Slots(slotpathes.defense.toughness.basic),() => { player.toughness += 1; AddPower("toughness",1); }),
     defensetoughnessbasic: new Upgrade("Steel plates","Increases toughness by 3 with no drawbacks.",new Slots(slotpathes.defense.toughness.basic.basic),() => { player.toughness += 3; AddPower("toughness",3); }),
@@ -282,8 +295,8 @@ const shop = {
     utilitybasic0: new Upgrade("XP booster","XP drops are increased by an additional 50%.",new Slots(slotpathes.utility.basic), () => { xpmultiplier *= 1.5; }),
     utilitybasic1: new Upgrade("XP engine","Increases XP drops by 10%. Unlocks powerful upgrades.",new Slots(slotpathes.utility.basic.basic),() => { xpmultiplier *= 1.1; }),
     utilitybasicbasic: new Upgrade("XP generator","Grants a free level-up every third round.",new Slots(slotpathes.utility.basic.basic.basic),() => { freelevel += 0.34; }),
-    utilitybasicpower: new Upgrade("XP materializer","Increases laser damage by 2 for every level-up.",new Slots(slotpathes.utility.basic.basic.power),() => { leveldamage += 2; }),
-    utilitybasicsuper: new Upgrade("Super XP absorber","Gaining XP will heal 6 hp.",new Slots(slotpathes.utility.basic.basic.super),() => { absorption += 6; }),
+    utilitybasicpower: new Upgrade("XP materializer","Increases laser damage by 1 for every level-up.",new Slots(slotpathes.utility.basic.basic.power),() => { leveldamage += 1; }),
+    utilitybasicsuper: new Upgrade("Super XP absorber","Increases max hp by 10 for every level-up.",new Slots(slotpathes.utility.basic.basic.super),() => { absorption += 10; }),
 
     utilitylaser0: new Upgrade("Fast lasers","Your ship's lasers will travel much faster and deal more knockback.",new Slots(slotpathes.utility.laser),() => { AddPower("laserspeed",250); AddPower("weight",0.03); }),
     utilitylaser1: new Upgrade("Heavy lasers","Increases laser knockback. Unlocks powerful upgrades.",new Slots(slotpathes.utility.laser.basic),() => { AddPower("laserspeed",50); AddPower("weight",0.02); }),
@@ -293,6 +306,9 @@ const shop = {
 
     utilityspeed0: new Upgrade("Power engines","Your ship will accelerate twice as fast.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 5; AddPower("acceleration",5); }),
     utilityspeed1: new Upgrade("Side engines","Your ship will rotate 50% faster. Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
+    utilityspeedbasic: new Upgrade("Cursed Damage","Increases damage by 10, pierce by 5, but decreases hp to 1.",new Slots(slotpathes.utility.speed.basic.basic),() => { player.health += -9999; player.maxhealth += -9999; AddPower("maxhealth",-9999); AddPower("dmg",10); AddPower("pierce",5); }),
+    utilityspeedpower: new Upgrade("","",new Slots(slotpathes.utility.speed.basic.power),() => {}),
+    utilityspeedsuper: new Upgrade("","",new Slots(slotpathes.utility.speed.basic.super),() => {}),
 }
 const mainpathes = [
     new Path("DamagePath","Root",shop.dmgroot,[
@@ -327,7 +343,11 @@ const mainpathes = [
             ]),
         ]),
         new Path("DefenseHealth","Defense",shop.defensehealth0,[
-            new Path("DefenseHealth1","DefenseStep",shop.defensehealth1,[]),
+            new Path("DefenseHealth1","DefenseStep",shop.defensehealth1,[
+                new Path("DefenseHealthBasic","DefenseSuper",shop.defensehealthbasic,[]),
+                new Path("DefenseHealthPower","DefenseSuper",shop.defensehealthpower,[]),
+                new Path("DefenseHealthSuper","DefenseSuper",shop.defensehealthsuper,[]),
+            ]),
         ]),
         new Path("DefenseToughness","Defense",shop.defensetoughness0,[
             new Path("DefenseToughness1","DefenseStep",shop.defensetoughness1,[
@@ -353,7 +373,11 @@ const mainpathes = [
             ]),
         ]),
         new Path("UtilitySpeed","Utility",shop.utilityspeed0,[
-            new Path("UtilitySpeed1","UtilityStep",shop.utilityspeed1,[]),
+            new Path("UtilitySpeed1","UtilityStep",shop.utilityspeed1,[
+                new Path("UtilitySpeedBasic","UtilitySuper",shop.utilityspeedbasic,[]),
+                new Path("UtilitySpeedPower","UtilitySuper",shop.utilityspeedpower,[]),
+                new Path("UtilitySpeedSuper","UtilitySuper",shop.utilityspeedsuper,[]),
+            ]),
         ]),
     ],true),
 ];
@@ -584,6 +608,9 @@ export const SetPlayer = plr => {
     player = plr;
     if (!shouldunlock) { return; }
     shouldunlock = false;
+    player.maxhealth += totalabsorption;
+    AddPower("maxhealth",totalabsorption);
+    AddPower("dmg",totalleveldamage);
     
     table.iterate(savedupgrades,upg => {
         allupgrades[upg].buy();
@@ -615,7 +642,6 @@ const updatexp = () => {
     AddXP(xp,t,l);
 }
 export const AddScore = (sc,x,y) => {
-    player.heal(absorption);
     sc *= xpmultiplier;
     score += sc;
     totalxp += sc;
@@ -653,9 +679,10 @@ export const SaveScore = async () => {
             savedScore -= levelTreshold;
         }
 
-        console.log("Levelup");
         AddPower("dmg",leveldamage);
-        console.log(leveldamage);
+        AddPower("maxhealth",absorption);
+        player.maxhealth += absorption;
+        totalabsorption += absorption;
         totalleveldamage += leveldamage;
         if (!levels) {
             levels = true;
@@ -668,6 +695,8 @@ export const SaveScore = async () => {
         
         SetSaveKey("level",level);
         SetSaveKey("score",savedScore);
+        SetSaveKey("damage",totalleveldamage);
+        SetSaveKey("absorption",totalabsorption);
     }
     if (levels) {
         await toSize(ui,ui.children.bg,new Scale2(0,0,0,0),0.5);
@@ -705,6 +734,8 @@ export const Load = async savedata => {
 
     savedScore = savedata.score || 0;
     level = savedata.level || 0;
+    totalabsorption = savedata.absorption || 0;
+    totalleveldamage = savedata.damage || 0;
 
     savedupgrades = savedata.upgrades || [];
     shouldunlock = true;
