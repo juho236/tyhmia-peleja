@@ -21,4 +21,6 @@ export const FrameMain = () => {
     }
 
     DrawFrame(frameTime,dt);
+
+    window.requestAnimationFrame(FrameMain);
 }

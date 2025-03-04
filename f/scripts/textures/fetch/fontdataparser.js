@@ -1,8 +1,8 @@
 const metadataOrder = ["scaleX","scaleY"];
 const metadataType = [Number,Number];
 
-const dataOrder = ["tileX","tileY"];
-const dataType = [Number,Number];
+const dataOrder = ["tileX","tileY","offsetX","offsetY"];
+const dataType = [Number,Number,Number,Number];
 
 export const ParseFontData = raw => {
     const metadata = [];

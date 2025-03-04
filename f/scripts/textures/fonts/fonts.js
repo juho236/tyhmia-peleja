@@ -1,5 +1,6 @@
-import { FetchBlob, FetchRaw } from "../fetch/fetch.js";
+import { FetchRaw } from "../fetch/fetch.js";
 import { ParseFontData } from "../fetch/fontdataparser.js";
+import { LoadTextureImage } from "../loader.js";
 
 export const Font = {
     Standard: {
@@ -15,7 +16,7 @@ export const FontInit = async () => {
 }
 const LoadFont = async (obj) => {
     if (obj.loaded) { return; }
-    const img = await FetchBlob(fontPath + obj.path);
+    const img = await LoadTextureImage(fontPath + obj.path);
     const raw = await FetchRaw(fontPath + obj.datapath);
 
     const data = ParseFontData(raw);

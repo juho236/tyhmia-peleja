@@ -15,6 +15,6 @@ export const AdjustWindow = () => {
 
     let scale = Math.min(Math.floor(scaleX),Math.floor(scaleY));
 
-    canvas.width = screenX * scale;
-    canvas.height = screenY * scale;
+    canvas.style.width = screenX * scale + "px";
+    canvas.style.height = screenY * scale + "px";
 }
