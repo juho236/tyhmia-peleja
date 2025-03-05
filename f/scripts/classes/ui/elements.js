@@ -24,7 +24,7 @@ export class UIText extends UIBase {
 
         this.textanchor = new Vector2(0.5,0.5);
     }
-    text = "";
+    text;
     font;
     fontsize;
     set text(n) {

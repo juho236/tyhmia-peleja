@@ -13,6 +13,11 @@ export class UILayer {
         this.children = new Table();
         layer.Items.insert(this);
     }
+    destroy() {
+        this.layer.Items.remove(this);
+        this.buffer.Draw.clearRect(0,0,screenX,screenY);
+        RenderLayer(this);
+    }
     changed = false;
 
     addChild(c) {
@@ -99,7 +104,9 @@ export class Color3 {
         this.r = r;
         this.g = g;
         this.b = b;
-        this.a = a || 255;
+        this.a = a;
+
+        if (a === undefined) { this.a = 255; }
 
         this.update();
     }

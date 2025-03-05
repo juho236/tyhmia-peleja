@@ -31,6 +31,7 @@ export const DrawFrame = (t,dt) => {
 
     ClearMain();
     layerOrder.map(k => {
+        Layers[k].Draw.clearRect(0,0,screenX,screenY);
         RenderLayered(Layers[k].Items,item => {
             item.render(t,dt);
         });

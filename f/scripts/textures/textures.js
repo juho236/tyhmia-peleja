@@ -2,7 +2,11 @@ import { LoadTextureImage } from "./loader.js";
 
 export const Textures = {
     World: {
-        Ground0: "world/ground0.png"
+        Ground0: "world/ground0.png",
+        Background0: "world/background0.png"
+    },
+    Player: {
+        Temp: "player/temp.png"
     }
 }
 
@@ -18,11 +22,10 @@ const loop = async (l,loadText) => {
             continue;
         }
 
-        loop(val,loadText);
+        await loop(val,loadText);
     }
 }
 
 export const LoadImages = async loadText => {
-    console.log("Load")
-    loop(Textures,loadText);
+    await loop(Textures,loadText);
 }
