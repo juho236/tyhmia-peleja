@@ -59,6 +59,7 @@ export class TextureEntityBase extends EntityBase {
         this.rotationbuffer = CreateBlankBuffer(0,0);
         this.updaterotationbuffer();
     }
+    visible = true;
 
     updaterotationbuffer() {
         let w = Math.max(this.buffer.Buffer.width,this.buffer.Buffer.height);
@@ -85,6 +86,7 @@ export class TextureEntityBase extends EntityBase {
     }
 
     render(t,dt) {
+        if (!this.visible) { return; }
         if (!this.texture) { return; }
         if (this.changed) { this.drawBase(t,dt); }
         this.changed = false;
@@ -107,6 +109,6 @@ export class TextureEntityBase extends EntityBase {
 
         x *= unitScale / Z;
         y *= unitScale / Z;
-        this.layer.Draw.drawImage(this.rotationbuffer.Buffer,screenX / 2 + x - width / 2 / Z,screenY / 2 + y - height / 2 / Z,w / Z,h / Z);
+        this.layer.Draw.drawImage(this.rotationbuffer.Buffer,Math.round(screenX / 2 + x - width / 2 / Z),Math.round(screenY / 2 + y - height / 2 / Z),w / Z,h / Z);
     }
 }

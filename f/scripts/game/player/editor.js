@@ -1,16 +1,22 @@
 import { CreatureBase } from "../../classes/entities/creature.js";
+import { SliceEntity } from "../../classes/entities/tiles.js";
 import { Vector2 } from "../../classes/position.js";
-import { screenY } from "../../engine/info.js";
+import { screenX, screenY, unitScale } from "../../engine/info.js";
 import { Layers } from "../../engine/renderer/index.js";
 import { GetEntities } from "../../engine/tick/tick.js";
+import { Textures } from "../../textures/textures.js";
 import { GetCamera, TickCamera, UpdateCamera } from "../camera/camera.js";
 import { BindToPress, BindToRelease, GetMouse } from "./input.js";
 
 export const LoadEditor = async () => {
     spawnEditor();
 }
+
+let overlaytarget;
+let selection;
 const spawnEditor = () => {
     const editor = new CreatureBase(new Vector2(0,0),new Vector2(1,1),0,Layers.player,undefined,16,16);
+    selection = new SliceEntity(undefined,new Vector2(1,1),0,Layers.ui,Textures.Editor.Select,16,16,5,5,5,5);
 
     BindToPress("EditLeft",() => { editor.Left = true; });
     BindToRelease("EditLeft",() => { editor.Left = false; });
@@ -39,6 +45,7 @@ const spawnEditor = () => {
         let entities = GetEntities();
         if (entities) { getEntity(entities,mouse.X,mouse.Y); }
         
+
         TickCamera(editor,dt);
     }
     editor.postRender = (t,dt) => {
@@ -49,10 +56,17 @@ const spawnEditor = () => {
 }
 
 const remove = p => {
-
+    overlaytarget = undefined;
+    selection.visible = false;
 }
 const add = p => {
-    console.log(p);
+    overlaytarget = p;
+    
+    selection.size = overlaytarget.size;
+    selection.pos = overlaytarget.pos;
+    selection.Z = overlaytarget.Z;
+    selection.changed = true;
+    selection.visible = true;
 }
 
 let previous;
@@ -60,15 +74,19 @@ const getEntity = (entities,x,y) => {
     let c = GetCamera();
     let target = undefined;
     let z = Infinity;
+
+    x = (x - screenX / 2) / unitScale;
+    y = (y - screenY / 2) / unitScale;
+
     entities.iterate(e => {
         if (e.Player) { return; }
         if (e.Z >= c.Z) { return; }
 
-        const Z = c.Z - e.Z;
+        const Z = (c.Z - e.Z);
         if (Z > z) { return; }
 
-        if (Math.abs(e.pos.X - c.X) - e.size.X / 2 > 0) { return; }
-        if (Math.abs(e.pos.Y - c.Y) - e.size.Y / 2 + Math.abs(c.Y - screenY / 2) > 0) { return; }
+        if (Math.abs(e.pos.X - (c.X + x / Z)) - e.size.X / 2 > 0) { return; }
+        if (Math.abs(e.pos.Y - (c.Y + y / Z)) - e.size.Y / 2 > 0) { return; }
 
         z = Z;
         target = e;

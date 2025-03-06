@@ -10,6 +10,9 @@ export const Textures = {
     },
     Player: {
         Temp: "player/temp.png"
+    },
+    Editor: {
+        Select: "editor/select.png"
     }
 }
 

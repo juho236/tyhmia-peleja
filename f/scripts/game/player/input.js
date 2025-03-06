@@ -1,4 +1,5 @@
 import { Vector2 } from "../../classes/position.js";
+import { GetScale } from "../../engine/renderer/window/window.js";
 
 const actions = {
     Left: "arrowleft",
@@ -24,11 +25,12 @@ let mouseX = 0;
 let mouseY = 0;
 
 export const GetMouse = () => {
-    return new Vector2(mouseX,mouseY);
+    const scale = GetScale();
+    return new Vector2(mouseX / scale,mouseY / scale);
 }
-document.body.onmousemove = e => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
+document.getElementById("game").onmousemove = e => {
+    mouseX = e.offsetX;
+    mouseY = e.offsetY;
 }
 
 const encode = () => {
