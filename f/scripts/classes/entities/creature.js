@@ -1,3 +1,4 @@
+import { StepPhysics } from "../../engine/physics/physics.js";
 import { TextureEntityBase } from "./index.js";
 
 export class CreatureBase extends TextureEntityBase {
@@ -17,5 +18,11 @@ export class CreatureBase extends TextureEntityBase {
         this.buffer.Buffer.width = this.textureX;
         this.buffer.Buffer.height = this.textureY;
         this.buffer.Draw.drawImage(this.texture,0,0);
+    }
+    onground = -1;
+    gravity = 40;
+
+    physics(dt) {
+        StepPhysics(this,dt);
     }
 }

@@ -1,7 +1,7 @@
 let delay = 0.1;
 
 const ping = async () => {
-    await new Promise(completed => { window.setTimeout(completed,delay * 1000); });
+    //await new Promise(completed => { window.setTimeout(completed,delay * 1000); });
 }
 
 export const FetchResponse = async (path) => {

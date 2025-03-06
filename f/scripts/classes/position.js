@@ -10,6 +10,9 @@ export class Vector2 {
     sub(v2) {
         return new Vector2(this.X - v2.X,this.Y - v2.Y);
     }
+    multiply(n) {
+        return new Vector2(this.X * n,this.Y * n);
+    }
 
     lerp(v2,t) {
         return new Vector2(this.X + (v2.X - this.X) * t,this.Y + (v2.Y - this.Y) * t);

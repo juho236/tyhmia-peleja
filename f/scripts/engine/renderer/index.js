@@ -1,5 +1,6 @@
 import { Table } from "../../classes/table.js";
 import { screenX, screenY, unitScale } from "../info.js"
+import { FrameMain } from "../tick/tick.js";
 import { CreateBlankBuffer } from "./buffer/buffer.js";
 import { RenderLayered } from "./render.js";
 import { AdjustWindow, ClearMain, DrawToMain } from "./window/window.js"
@@ -28,12 +29,14 @@ Object.entries(Layers).map(v => {
 })
 
 export const DrawFrame = (t,dt) => {
+    FrameMain(t,dt);
 
     ClearMain();
     layerOrder.map(k => {
         Layers[k].Draw.clearRect(0,0,screenX,screenY);
         RenderLayered(Layers[k].Items,item => {
             item.render(t,dt);
+            if (item.postRender) { item.postRender(t,dt); }
         });
         DrawToMain(Layers[k]);
     });

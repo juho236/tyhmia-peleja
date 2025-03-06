@@ -3,7 +3,10 @@ import { LoadTextureImage } from "./loader.js";
 export const Textures = {
     World: {
         Ground0: "world/ground0.png",
-        Background0: "world/background0.png"
+        Ground0End: "world/ground0-end.png",
+        Background0: "world/background0.png",
+        Wall0: "world/wall0.png",
+        Black: "world/black.png"
     },
     Player: {
         Temp: "player/temp.png"

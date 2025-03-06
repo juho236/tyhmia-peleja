@@ -1,5 +1,13 @@
+import { Vector2 } from "../../classes/position.js";
+
 const actions = {
-    Left: "arrowleft"
+    Left: "arrowleft",
+    Right: "arrowright",
+    Jump: "z",
+    EditLeft: "a",
+    EditRight: "d",
+    EditDown: "s",
+    EditUp: "w",
 }
 let sheet = {};
 const press = {};
@@ -10,6 +18,17 @@ export const BindToPress = (action,callback) => {
 }
 export const BindToRelease = (action,callback) => {
     release[action] = callback;
+}
+
+let mouseX = 0;
+let mouseY = 0;
+
+export const GetMouse = () => {
+    return new Vector2(mouseX,mouseY);
+}
+document.body.onmousemove = e => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 }
 
 const encode = () => {
