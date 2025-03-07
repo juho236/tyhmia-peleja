@@ -19,6 +19,7 @@ export class UILayer {
         RenderLayer(this);
     }
     changed = false;
+    enabled = true;
 
     addChild(c) {
         this.children.insert(c);
@@ -27,6 +28,7 @@ export class UILayer {
         this.changed = true;
     }
     render(t,dt) {
+        if (!this.enabled) { return; }
         if (this.changed) { this.draw(); }
         this.changed = false;
         RenderLayer(this,t,dt);
@@ -48,7 +50,6 @@ export class UIBase {
         this.Z = z || 0;
 
         this.children = new Table();
-        this.visible = this.color.a > 0;
     }
 
     updateparent() {
@@ -57,6 +58,7 @@ export class UIBase {
         this.parent.changed = true;
     }
 
+    visible = true;
     color;
     pos;
     size;

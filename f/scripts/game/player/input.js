@@ -38,7 +38,15 @@ const encode = () => {
         sheet[actions[action]] = action;
     }
 }
+document.getElementById("game").onmousedown = e => {
+    
+}
+document.getElementById("game").onmouseup = e => {
+    const action = release["Click"];
+    if (!action) { return; }
 
+    action();
+}
 document.body.onkeydown = e => {
     const key = e.key.toLowerCase();
 

@@ -12,7 +12,10 @@ export const Textures = {
         Temp: "player/temp.png"
     },
     Editor: {
-        Select: "editor/select.png"
+        Select: "editor/select.png",
+        Move: "editor/move.png",
+        Scale: "editor/scale.png",
+        Rotate: "editor/rotate.png"
     }
 }
 

@@ -1,6 +1,8 @@
 import { CreatureBase } from "../../classes/entities/creature.js";
 import { SliceEntity } from "../../classes/entities/tiles.js";
-import { Vector2 } from "../../classes/position.js";
+import { Scale2, Vector2 } from "../../classes/position.js";
+import { UIFrame, UIImage } from "../../classes/ui/elements.js";
+import { Color3, Sizes, UILayer } from "../../classes/ui/index.js";
 import { screenX, screenY, unitScale } from "../../engine/info.js";
 import { Layers } from "../../engine/renderer/index.js";
 import { GetEntities } from "../../engine/tick/tick.js";
@@ -14,9 +16,13 @@ export const LoadEditor = async () => {
 
 let overlaytarget;
 let selection;
+let uilayer;
+let arrowContainer;
+let arrows;
 const spawnEditor = () => {
     const editor = new CreatureBase(new Vector2(0,0),new Vector2(1,1),0,Layers.player,undefined,16,16);
     selection = new SliceEntity(undefined,new Vector2(1,1),0,Layers.ui,Textures.Editor.Select,16,16,5,5,5,5);
+    selection.visible = false;
 
     BindToPress("EditLeft",() => { editor.Left = true; });
     BindToRelease("EditLeft",() => { editor.Left = false; });
@@ -26,6 +32,17 @@ const spawnEditor = () => {
     BindToRelease("EditUp",() => { editor.Up = false; });
     BindToPress("EditDown",() => { editor.Down = true; });
     BindToRelease("EditDown",() => { editor.Down = false; });
+    BindToRelease("Click",() => {
+        overlay();
+    });
+
+    uilayer = new UILayer(Layers.ui,1);
+    uilayer.enabled = false;
+    arrows = [new UIImage(new Scale2(0.5,0,0,16),new Scale2(0,16,0,16),new Vector2(0.5,0),Textures.Editor.Move)];
+    arrowContainer = new UIFrame(undefined,Sizes.Fullscreen,undefined,undefined);
+
+    arrowContainer.addChild(arrows[0]);
+    uilayer.addChild(arrowContainer);
 
     editor.Player = true;
     editor.physics = undefined;
@@ -42,8 +59,16 @@ const spawnEditor = () => {
         }
 
         let mouse = GetMouse();
+        let cam = GetCamera();
         let entities = GetEntities();
         if (entities) { getEntity(entities,mouse.X,mouse.Y); }
+
+        if (overlaytarget) {
+            const Z = (cam.Z - overlaytarget.Z) / 4;
+            let rpos = overlaytarget.pos.sub(new Vector2(cam.X,cam.Y)).multiply(1 / Z);
+            arrows[0].pos = new Scale2(0,screenX / 2 + rpos.X * unitScale,0,Math.min(Math.max(screenY / 2 + rpos.Y * unitScale - overlaytarget.size.Y / 2 * unitScale - 16,0),screenY - 16));
+            uilayer.changed = true;
+        }
         
 
         TickCamera(editor,dt);
@@ -55,18 +80,29 @@ const spawnEditor = () => {
     editor.start();
 }
 
+let hovertarget;
 const remove = p => {
-    overlaytarget = undefined;
-    selection.visible = false;
+    hovertarget = undefined;
 }
 const add = p => {
-    overlaytarget = p;
-    
+    hovertarget = p;
+}
+
+const overlay = () => {
+    if (overlaytarget) {
+        selection.visible = false;
+        uilayer.enabled = false;
+    }
+    overlaytarget = hovertarget;
+    if (!overlaytarget) { return; }
+
     selection.size = overlaytarget.size;
     selection.pos = overlaytarget.pos;
     selection.Z = overlaytarget.Z;
     selection.changed = true;
     selection.visible = true;
+    arrowContainer.visible = true;
+    uilayer.enabled = true;
 }
 
 let previous;

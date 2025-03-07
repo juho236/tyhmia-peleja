@@ -13,6 +13,20 @@ export class UIFrame extends UIBase {
         draw.fillRect(x,y,w,h);
     }
 }
+export class UIImage extends UIBase {
+    constructor(pos,size,anchor,img) {
+        super(pos,size,anchor);
+
+        this.img = img;
+    }
+
+    render(x,y,w,h) {
+        const draw = this.parent.buffer.Draw;
+
+        draw.drawImage(this.img,x,y,w,h);
+    }
+}
+
 
 export class UIText extends UIBase {
     constructor(pos,size,anchor,color,text,font,fontsize) {
