@@ -46,8 +46,6 @@ const spawnPlayer = () => {
         }
         player.JumpBuffered = false;
 
-        player.rotation = dir / 9;
-        player.changed = true;
         player.velocity = new Vector2(dir * speed,player.velocity.Y);
         TickCamera(player,dt);
     }

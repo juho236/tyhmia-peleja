@@ -99,6 +99,9 @@ export class TextureEntityBase extends EntityBase {
         let x = pos.X - cam.X;
         let y = pos.Y - cam.Y;
 
+        let xp = x * unitScale / Z;
+        let yp = y * unitScale / Z;
+
         let width = this.buffer.Buffer.width;
         let height = this.buffer.Buffer.height;
         let w = this.rotationbuffer.Buffer.width;
@@ -109,6 +112,29 @@ export class TextureEntityBase extends EntityBase {
 
         x *= unitScale / Z;
         y *= unitScale / Z;
-        this.layer.Draw.drawImage(this.rotationbuffer.Buffer,Math.round(screenX / 2 + x - width / 2 / Z),Math.round(screenY / 2 + y - height / 2 / Z),w / Z,h / Z);
+
+        let xd = Math.abs(xp) - width / 2 / Z;
+        let yd = Math.abs(yp) - height / 2 / Z;
+        if (xd > screenX / 2) { return; }
+        if (yd > screenY / 2) { return; }
+
+        let clipX = 0;
+        let clipY = 0;
+
+        let xmax = screenX;
+        let xmin = xmax / 2;
+
+        if (-x > xmin) { clipX -= xmin + x; }
+
+        let clipWidth = clipX;
+        let clipHeight = clipY;
+
+        let ww = width / 2 + xp;
+        
+        if (ww > xmax) { clipWidth += ww - xmax; }
+        console.log((width - clipWidth) / Z); 
+
+        //this.layer.Draw.drawImage(this.rotationbuffer.Buffer,clipX,clipY,w - clipWidth,h - clipHeight,Math.floor(screenX / 2 + x - ((w - width) / 2 / Z) + clipX),Math.floor(screenY / 2 + y - height / 2 / Z + clipY),w / Z - clipWidth / Z,h / Z - clipHeight / Z);
+        this.layer.Draw.drawImage(this.buffer.Buffer,clipX,clipY,width - clipWidth,height - clipHeight,screenX / 2 + x + clipX,screenY / 2 + y + clipY,(width - clipWidth) / Z,height / Z - clipHeight);
     }
 }
