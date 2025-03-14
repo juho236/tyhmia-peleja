@@ -13,8 +13,8 @@ export class TiledEntity extends TextureEntityBase {
     object = true;
 
     draw(t,dt) {
-        for (let x=0;x<this.size.X * unitScale;x+=this.tileX) {
-            for (let y=0;y<this.size.Y * unitScale;y+=this.tileY) {
+        for (let x=0;x<Math.abs(this.size.X) * unitScale;x+=this.tileX) {
+            for (let y=0;y<Math.abs(this.size.Y) * unitScale;y+=this.tileY) {
                 this.buffer.Draw.drawImage(this.texture,x,y,this.tileX,this.tileY);
             }
         }

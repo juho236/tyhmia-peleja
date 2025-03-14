@@ -10,8 +10,8 @@ const findWalls = (entity) => {
         if (!obj.object) { return; }
         if (!obj.collision) { return; }
 
-        const xdiff = Math.abs(entity.pos.X - obj.pos.X) - entity.size.X / 2 - obj.size.X / 2;
-        const ydiff = Math.abs(entity.pos.Y - obj.pos.Y) - entity.size.Y / 2 - obj.size.Y / 2;
+        const xdiff = Math.abs(entity.pos.X - obj.pos.X) - Math.abs(entity.size.X) / 2 - Math.abs(obj.size.X) / 2;
+        const ydiff = Math.abs(entity.pos.Y - obj.pos.Y) - Math.abs(entity.size.Y) / 2 - Math.abs(obj.size.Y) / 2;
         
         if (ydiff < 0) {
             if (entity.pos.X > obj.pos.X) {
