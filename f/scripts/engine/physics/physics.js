@@ -37,40 +37,50 @@ export const StepPhysics = (entity,dt) => {
     const walls = findWalls(entity);
 
     entity.pos = new Vector2(entity.pos.X,entity.pos.Y);
+    let vel = entity.velocity;
+    
+    if (entity.onground <= 0) { vel.Y += entity.gravity * dt; }
+    if (entity.knockbackX) {
+        vel = new Vector2(entity.knockbackX,0);
 
-    if (entity.onground <= 0) { entity.velocity.Y += entity.gravity * dt; }
+        entity.knockbackTimer -= dt;
+        if (entity.knockbackTimer <= 0) { entity.knockbackX = undefined; }
+    }
+
     if (walls) {
-        if (entity.velocity.X > 0) {
-            if (entity.velocity.X * dt < walls.Right) {
-                entity.pos.X += entity.velocity.X * dt;
+        if (vel.X > 0) {
+            if (vel.X * dt < walls.Right) {
+                entity.pos.X += vel.X * dt;
             } else {
                 entity.pos.X += walls.Right;
             }
         } else {
-            if (-entity.velocity.X * dt < walls.Left) {
-                entity.pos.X += entity.velocity.X * dt;
+            if (-vel.X * dt < walls.Left) {
+                entity.pos.X += vel.X * dt;
             } else {
                 entity.pos.X -= walls.Left;
             }
         }
         
-        if (entity.velocity.Y >= 0) {
-            if (entity.velocity.Y * dt < walls.Down) {
-                entity.pos.Y += entity.velocity.Y * dt;
+        if (vel.Y >= 0) {
+            if (vel.Y * dt < walls.Down) {
+                entity.pos.Y += vel.Y * dt;
                 entity.onground -= dt;
             } else {
                 entity.pos.Y += walls.Down;
                 entity.onground = 0.1;
-                entity.velocity.Y = 0;
+                vel.Y = 0;
             }
         } else {
-            if (-entity.velocity.Y * dt < walls.Up) {
-                entity.pos.Y += entity.velocity.Y * dt;
+            if (-vel.Y * dt < walls.Up) {
+                entity.pos.Y += vel.Y * dt;
                 entity.onground -= dt;
             } else {
                 entity.pos.Y += walls.Up;
-                entity.velocity.Y = 0;
+                vel.Y = 0;
             }
         }
     }
+
+    entity.velocity = vel;
 }

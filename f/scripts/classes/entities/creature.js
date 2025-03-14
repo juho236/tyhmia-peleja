@@ -22,6 +22,11 @@ export class CreatureBase extends TextureEntityBase {
     onground = -1;
     gravity = 40;
 
+    setvelocity(x,y,t) {
+        this.knockbackX = x;
+        this.velocity.Y = y;
+        this.knockbackTimer = t;
+    }
     physics(dt) {
         StepPhysics(this,dt);
     }

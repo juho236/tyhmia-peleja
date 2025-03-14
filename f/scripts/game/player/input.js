@@ -5,6 +5,7 @@ const actions = {
     Left: "arrowleft",
     Right: "arrowright",
     Jump: "z",
+    Dash: "c",
     EditLeft: "a",
     EditRight: "d",
     EditDown: "s",

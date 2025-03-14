@@ -20,11 +20,14 @@ const spawnPlayer = () => {
     BindToRelease("Right",() => { player.Right = false; });
     BindToPress("Jump",() => { player.Jump = true; player.JumpBuffered = true; });
     BindToRelease("Jump",() => { player.Jump = false; });
+    BindToPress("Dash",() => { player.Dash = true; });
 
     player.Speed = 4;
     player.JumpPower = 6;
     player.JumpStrength = 28;
     player.JumpTimer = 0;
+    player.DashCooldown = 0;
+    player.Direction = 1;
 
     player.AI = dt => {
         let speed = player.Speed;
@@ -33,6 +36,7 @@ const spawnPlayer = () => {
         player.LeftBuffered = false;
         if (player.Right || player.RightBuffered) { dir += 1; }
         player.RightBuffered = false;
+        if (dir != 0) { player.Direction = dir; }
 
         player.JumpTimer -= dt;
         if (player.onground > 0 && (player.Jump || player.JumpBuffered)) {
@@ -45,6 +49,13 @@ const spawnPlayer = () => {
             if (player.Jump) { player.velocity.Y -= player.JumpStrength * dt; } else { player.Jumping = false; }
         }
         player.JumpBuffered = false;
+
+        player.DashCooldown -= dt;
+        if (player.Dash && player.DashCooldown <= 0) {
+            player.DashCooldown = 0.65;
+            player.setvelocity(player.Direction * 15,0,0.2);
+        }
+        player.Dash = false;
 
         player.velocity = new Vector2(dir * speed,player.velocity.Y);
         TickCamera(player,dt);
