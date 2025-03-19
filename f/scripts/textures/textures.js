@@ -11,6 +11,19 @@ export const Textures = {
     Player: {
         Temp: "player/temp.png"
     },
+    Weapons: {
+        Default: {
+            Slash0: "weapons/slash_0.png",
+            Slash1: "weapons/slash_1.png",
+            Slash2: "weapons/slash_2.png",
+            Slash3: "weapons/slash_3.png",
+            Slash4: "weapons/slash_4.png",
+            Slash5: "weapons/slash_5.png",
+            Slash6: "weapons/slash_6.png",
+            Slash7: "weapons/slash_7.png",
+            Slash8: "weapons/slash_8.png",
+        }
+    },
     Editor: {
         Select: "editor/select.png",
         Move: "editor/move.png",

@@ -5,6 +5,7 @@ const actions = {
     Left: "arrowleft",
     Right: "arrowright",
     Jump: "z",
+    Attack: "x",
     Dash: "c",
     EditLeft: "a",
     EditRight: "d",
@@ -29,7 +30,7 @@ export const GetMouse = () => {
     const scale = GetScale();
     return new Vector2(mouseX / scale,mouseY / scale);
 }
-document.getElementById("game").onmousemove = e => {
+document.body.onmousemove = e => {
     mouseX = e.offsetX;
     mouseY = e.offsetY;
 }
@@ -39,10 +40,10 @@ const encode = () => {
         sheet[actions[action]] = action;
     }
 }
-document.getElementById("game").onmousedown = e => {
+document.body.onmousedown = e => {
     
 }
-document.getElementById("game").onmouseup = e => {
+document.body.onmouseup = e => {
     const action = release["Click"];
     if (!action) { return; }
 

@@ -27,6 +27,10 @@ export class EntityBase {
         this.changed = true;
     }
     size;
+    set size(r) {
+        if (this.size == r) { return; }
+        this.changed = true;
+    }
     Z;
     changed = false;
     update() {
@@ -67,8 +71,9 @@ export class TextureEntityBase extends EntityBase {
         this.rotationbuffer.Buffer.height = w * 2;
     }
     drawBase(t,dt) {
-        this.buffer.Buffer.width = Math.abs(this.size.X) * unitScale;
-        this.buffer.Buffer.height = Math.abs(this.size.Y) * unitScale;
+        if (this.textureX) { this.buffer.Buffer.width = this.textureX; } else { this.buffer.Buffer.width = Math.abs(this.size.X) * unitScale; }
+        if (this.textureY) { this.buffer.Buffer.height = this.textureY; } else { this.buffer.Buffer.height = Math.abs(this.size.Y) * unitScale; }
+        
         this.updaterotationbuffer();
 
         let flipX = Math.sign(this.size.X),flipY = Math.sign(this.size.Y);
@@ -89,9 +94,6 @@ export class TextureEntityBase extends EntityBase {
         const rot = this.rotation0 + (this.rotation1 - this.rotation0) * t;
         this.rotationbuffer.Draw.setTransform(Math.cos(rot),Math.sin(rot),-Math.sin(rot),Math.cos(rot),w / 2,h / 2);
         this.rotationbuffer.Draw.drawImage(this.buffer.Buffer,-w / 2 + width / 2,-h / 2 + height / 2);
-        
-        console.log(flipX,flipY);
-        console.log(width,height);
     }
 
     render(t,dt) {
@@ -115,8 +117,8 @@ export class TextureEntityBase extends EntityBase {
 
         let width = this.buffer.Buffer.width;
         let height = this.buffer.Buffer.height;
-        let w = this.rotationbuffer.Buffer.width;
-        let h = this.rotationbuffer.Buffer.height;
+        let w = Math.abs(this.size.X) * unitScale;
+        let h = Math.abs(this.size.Y) * unitScale;
 
 
         x -= Math.abs(this.size.X) / 2;
@@ -158,8 +160,8 @@ export class TextureEntityBase extends EntityBase {
             height - clipHeight * Z,
             screenX / 2 + x + clipX,
             screenY / 2 + y + clipY,
-            width / Z - clipWidth,
-            height / Z - clipHeight
-            );
+            w / Z - clipWidth,
+            h / Z - clipHeight
+        );
     }
 }

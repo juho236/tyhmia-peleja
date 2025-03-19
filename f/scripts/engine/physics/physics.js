@@ -1,4 +1,5 @@
 import { Vector2 } from "../../classes/position.js";
+import { SetState } from "../../classes/states/index.js";
 import { GetEntities } from "../tick/tick.js";
 
 const findWalls = (entity) => {
@@ -44,7 +45,7 @@ export const StepPhysics = (entity,dt) => {
         vel = new Vector2(entity.knockbackX,0);
 
         entity.knockbackTimer -= dt;
-        if (entity.knockbackTimer <= 0) { entity.knockbackX = undefined; }
+        if (entity.knockbackTimer <= 0) { entity.knockbackX = undefined; SetState(entity,undefined); }
     }
 
     if (walls) {

@@ -10,8 +10,9 @@ export const Layers = {
     env: 1,
     entity: 2,
     player: 3,
-    foreground: 4,
-    ui: 5
+    particles: 4,
+    foreground: 5,
+    ui: 10
 }
 const layerOrder = [];
 
@@ -35,6 +36,7 @@ export const DrawFrame = (t,dt) => {
     layerOrder.map(k => {
         Layers[k].Draw.clearRect(0,0,screenX,screenY);
         RenderLayered(Layers[k].Items,item => {
+            if (item.AnimationStep) { item.AnimationStep(item,t,dt); }
             item.render(t,dt);
             if (item.postRender) { item.postRender(t,dt); }
         });

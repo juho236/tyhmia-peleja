@@ -15,8 +15,7 @@ export class CreatureBase extends TextureEntityBase {
     }
     
     draw(t,dt) {
-        this.buffer.Buffer.width = this.textureX;
-        this.buffer.Buffer.height = this.textureY;
+        if (!this.texture) { return; }
         this.buffer.Draw.drawImage(this.texture,0,0);
     }
     onground = -1;

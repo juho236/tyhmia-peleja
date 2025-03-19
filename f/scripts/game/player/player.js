@@ -1,5 +1,7 @@
 import { CreatureBase } from "../../classes/entities/creature.js";
 import { Vector2 } from "../../classes/position.js";
+import { CheckState, SetState, States } from "../../classes/states/index.js";
+import { SetWeapon } from "../../classes/weapons/index.js";
 import { Layers } from "../../engine/renderer/index.js";
 import { Textures } from "../../textures/textures.js";
 import { TickCamera, UpdateCamera } from "../camera/camera.js";
@@ -13,14 +15,22 @@ export const LoadPlayer = async () => {
 
 const spawnPlayer = () => {
     const player = new CreatureBase(new Vector2(0,1.125),new Vector2(0.75,0.75),0,Layers.player,Textures.Player.Temp,12,12);
+    SetWeapon(player,"Default");
 
     BindToPress("Left",() => { player.Left = true; player.LeftBuffered = true; });
     BindToRelease("Left",() => { player.Left = false; });
+
     BindToPress("Right",() => { player.Right = true; player.RightBuffered = true; });
     BindToRelease("Right",() => { player.Right = false; });
+
     BindToPress("Jump",() => { player.Jump = true; player.JumpBuffered = true; });
     BindToRelease("Jump",() => { player.Jump = false; });
+
     BindToPress("Dash",() => { player.Dash = true; });
+    BindToRelease("Dash",() => { player.Dash = false; });
+
+    BindToPress("Attack",() => { player.Attacking = true; player.AttackBuffered = true; });
+    BindToRelease("Attack",() => { player.Attacking = false; });
 
     player.Speed = 4;
     player.JumpPower = 6;
@@ -51,11 +61,14 @@ const spawnPlayer = () => {
         player.JumpBuffered = false;
 
         player.DashCooldown -= dt;
-        if (player.Dash && player.DashCooldown <= 0) {
+        if (player.Dash && player.DashCooldown <= 0 && CheckState(player,States.Dash)) {
+            SetState(player,States.Dash);
             player.DashCooldown = 0.65;
             player.setvelocity(player.Direction * 15,0,0.2);
         }
-        player.Dash = false;
+
+        player.Attack = player.Attacking || player.AttackBuffered;
+        player.AttackBuffered = false;
 
         player.velocity = new Vector2(dir * speed,player.velocity.Y);
         TickCamera(player,dt);

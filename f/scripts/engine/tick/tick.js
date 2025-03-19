@@ -7,6 +7,7 @@ export const TickMain = dt => {
     ticks.iterate(entity => {
         if (entity.preRender) { entity.preRender(); }
         if (entity.AI) { entity.AI(dt); }
+        if (entity.WeaponStep) { entity.WeaponStep(entity,dt); }
         if (entity.logic) { entity.logic(dt); }
         if (entity.prepareRender) { entity.prepareRender(); }
     });
