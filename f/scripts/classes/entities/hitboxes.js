@@ -1,3 +1,4 @@
+import { GetEntities } from "../../engine/tick/tick.js";
 import { Vector2 } from "../position.js";
 import { TextureEntityBase } from "./index.js";
 
@@ -25,6 +26,18 @@ class HitboxEntity extends TextureEntityBase {
         }
 
         if (!this.Active) { return; }
+        this.Active -= dt;
+
+        GetEntities().iterate(entity => {
+            if (entity == this) { return; }
+            if (!entity.health) { return; }
+            if (entity == this.attachment) { return; }
+
+            
+        });
+
+        if (this.Active > 0) { return; }
+        this.Active = undefined;
     }
 }
 export class AnimatedHitboxEntity extends HitboxEntity {

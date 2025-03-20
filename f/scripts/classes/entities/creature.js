@@ -20,6 +20,12 @@ export class CreatureBase extends TextureEntityBase {
     }
     onground = -1;
     gravity = 40;
+    health = 100;
+    maxhealth = 100;
+    setHealth(hp) {
+        this.maxhealth = hp;
+        this.health = hp;
+    }
 
     setvelocity(x,y,t) {
         this.knockbackX = x;
