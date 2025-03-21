@@ -308,8 +308,8 @@ const shop = {
     utilityspeed0: new Upgrade("Power engines","Stepping stone for greater upgrades.",new Slots(slotpathes.utility.speed),() => { player.acceleration += 1; AddPower("acceleration",1); }),
     utilityspeed1: new Upgrade("Side engines","Unlocks powerful upgrades.",new Slots(slotpathes.utility.speed.basic),() => { player.turnspeed += 3; AddPower("turnspeed",3); }),
     utilityspeedbasic: new Upgrade("Cursed Damage","Increases damage by 10 and pierce by 5, but decreases hp to 1.",new Slots(slotpathes.utility.speed.basic.basic),() => { player.health += -9999; player.maxhealth += -9999; AddPower("maxhealth",-9999); AddPower("dmg",10); AddPower("pierce",5); }),
-    utilityspeedpower: new Upgrade("Cursed Defense","Increases defense by 10, toughness by 3, contact damage by 50, regeneration by 3 hp/s and health by 500 hp, but disables lasers completely.",new Slots(slotpathes.utility.speed.basic.power),() => {
-        player.defense += 10; AddPower("defense",10); player.toughness += 3; AddPower("toughness",3); player.health += 500; player.maxhealth += 500; AddPower("maxhealth",500); player.shootspeed -= 9999; AddPower("shootspeed",-9999); player.regen += 3; AddPower("regen",3); player.dmg += 50; AddPower("contactdamage",50); 
+    utilityspeedpower: new Upgrade("Cursed Defense","Increases defense by 10, toughness by 3, contact damage by 50, regeneration by 3 hp/s and health by 200 hp, but disables lasers completely.",new Slots(slotpathes.utility.speed.basic.power),() => {
+        player.defense += 10; AddPower("defense",10); player.toughness += 3; AddPower("toughness",3); player.health += 500; player.maxhealth += 200; AddPower("maxhealth",200); player.shootspeed -= 9999; AddPower("shootspeed",-9999); player.regen += 3; AddPower("regen",3); player.dmg += 50; AddPower("contactdamage",50); 
     }),
     utilityspeedsuper: new Upgrade("No Upgrade","There is no upgrade.",new Slots(slotpathes.utility.speed.basic.super),() => {}),
 
