@@ -258,7 +258,7 @@ const LoadEnemies = () => {
                 if (!e.detonate) { e.detonate = 3; }
                 e.hitbox = 24;
     
-                e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800)).add(player.velocity.multiply(dt / Math.sqrt(player.pos.sub(e.pos).magnitude()) * 25));
+                e.velocity = e.velocity.add(player.pos.sub(e.pos).unit().multiply(dt * 800));
     
                 //let d = player.pos.sub(e.pos).abs();
                 //d = player.pos.add(player.velocity.multiplyv2(t)).sub(e.pos);

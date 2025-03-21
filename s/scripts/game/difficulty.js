@@ -27,7 +27,7 @@ export const Load = async (completed,savedata) => {
             f = new Frame(
                 {
                     pos: new Scale2(0,0,0,index * 40), 
-                    size: new Scale2(1,0,0,20), 
+                    size: new Scale2(1,0,0,40), 
                     anchor: new Anchor(0,0), 
                     color: new Color(0,0,0,255),
                     onclick: () => {
