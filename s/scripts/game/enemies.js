@@ -5,6 +5,7 @@ import { table } from "../lib/table.js";
 import { LoadTextures, TextureBuffers } from "../lib/texture.js";
 import { Layers, Shake, height, width } from "../renderer/render.js";
 import { boss1 } from "./enemies/boss1.js";
+import { chargeship } from "./enemies/chargeship.js";
 import { lasership } from "./enemies/lasership.js";
 import { SaveScore, SetScore } from "./score.js";
 
@@ -80,7 +81,14 @@ let waves = [
         {id: "enemy",enemy: "smallmeteor",count: 20,time: 0.1},
         {id: "enemy",enemy: "tinymeteor",count: 100,time: 0.1},
         {id: "waitAll"}
-    ]}
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "chargeship",count: 2,time: 15}
+    ]},
+    {pattern: [
+        {id: "enemy",enemy: "chargeship",count: 10,time: 12},
+        {id: "enemy",enemy: "lasership",count: 2,time: 10},
+    ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
 
@@ -175,6 +183,43 @@ const LoadEnemies = () => {
                     return;
                 }
                 lasership.ai(e,dt);
+            },
+            died: e => {
+                e.inactive = true;
+                e.invisible = true;
+                e.removetimer = 5;
+
+                for (let i=0;i<8;i++) { e.fire.emit(); }
+                for (let i=0;i<32;i++) { e.dust.emit(); }
+                
+                Shake(2,0.5);
+            }
+        },
+        chargeship: {
+            textures: {
+                default: "assets/chargeship.png",
+            },
+            width: 32,
+            height: 32,
+            size: new v2(32,32),
+            hitbox: new v2(29,29),
+            score: 55,
+            health: 500,
+            oob: true,
+            load: e => {
+                e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));
+                e.dust = new dustParticleEmitter("Destroy",0,e,new v2(0,0),enemies.dust.textures,new v2(5,5));
+                chargeship.load(e,player,hardattacks,impossibleattacks,nightmareattacks);
+            },
+            ai: (e, dt) => {
+                if (e.removetimer) {
+                    e.removetimer -= dt;
+                    if (e.removetimer > 0) { return; }
+    
+                    e.destroy();
+                    return;
+                }
+                chargeship.ai(e,dt);
             },
             died: e => {
                 e.inactive = true;
