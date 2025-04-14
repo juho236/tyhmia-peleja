@@ -651,13 +651,17 @@ export const SetScore = sc => {
     console.log(score);
 }
 
+export const getLvlXP = x => {
+    return 75 + (x + 1) * (x / 2) * 50;
+}
+
 const updatexp = () => {
     let xp = score;
     let t = 0;
     let lvl = level;
     let l = 0;
     while (true) {
-        t = 75 + lvl * 120;
+        t = getLvlXP(lvl);
         if (xp < t) { break; }
 
         xp -= t;
@@ -696,7 +700,7 @@ export const SaveScore = async () => {
     let levels = false;
     freelevels += freelevel;
     while (true) {
-        let levelTreshold = 75 + level * 120;
+        let levelTreshold = getLvlXP(level);
         if (freelevels > 0) { freelevels -= 1; } else {
             if (savedScore < levelTreshold) { break; }
             
