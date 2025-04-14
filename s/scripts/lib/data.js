@@ -10,7 +10,7 @@ export const Load = async () => {
         let settings = localstorage.getItem("settings");
 
         savedata = JSON.parse(data) || {};
-        savedata = {wave: 17, difficulty: 3, score: 0};
+        //savedata = {wave: 18, difficulty: 1, score: 0};
 
         //savedata.upgrades = ["UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserPower","DamagePath","DamageBasic","DamagePierce","DamagePierce1","DamagePierceSuper"]
         //savedata.upgrades = ["DamagePath","DamageBasic","DamageBasic1","DamageBasicSuper","DamagePierce","UtilityPath","UtilityLaser","UtilityLaser1","UtilityLaserSuper"];

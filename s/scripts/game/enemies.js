@@ -83,11 +83,11 @@ let waves = [
         {id: "waitAll"}
     ]},
     {pattern: [
-        {id: "enemy",enemy: "chargeship",count: 2,time: 15}
+        {id: "enemy",enemy: "chargeship",count: 2,time: 12}
     ]},
     {pattern: [
-        {id: "enemy",enemy: "chargeship",count: 10,time: 12},
-        {id: "enemy",enemy: "lasership",count: 2,time: 10},
+        {id: "enemy",enemy: "chargeship",count: 5,time: 18,parallel: true},
+        {id: "enemy",enemy: "lasership",count: 2,time: 30},
     ]},
 ]
 waves.map(wave => {wave.pattern.push({id: "waitAll"})});
@@ -204,7 +204,7 @@ const LoadEnemies = () => {
             size: new v2(32,32),
             hitbox: new v2(29,29),
             score: 55,
-            health: 500,
+            health: 700,
             oob: true,
             load: e => {
                 e.fire = new fireParticleEmitter("Fire",0,e,new v2(0,0),enemies.fire.textures,new v2(5,5));

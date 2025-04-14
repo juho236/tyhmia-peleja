@@ -628,7 +628,7 @@ export class LaserProjectile extends projectile {
             table.iterate(entities,entity => {
                 if (!entity) { return; }
                 let dis = entity.pos.sub(this.pos).magnitude();
-                //if (dis > 150) { return; }
+                if (dis > 50) { return; }
                 if (dis >= d) { return; }
                 if (entity.isProjectile) { return; }
                 if (entity.group == this.group) { return; }
