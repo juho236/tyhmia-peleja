@@ -57,7 +57,7 @@ export const chargeship = {
 const charge = e => {
     if (e.chargepreparing) { return; }
     e.chargepreparing = e.chargepreparetime;
-    const d = player.pos.add(player.velocity.multiply(e.chargepreparetime + player.pos.sub(e.pos).magnitude() / e.charge)).sub(e.pos);
+    const d = player.pos.add(player.velocity.multiply(e.chargepreparetime / 2)).sub(e.pos);
     e.trot = Math.atan2(d.x,-d.y);
 }
 const docharge = e => {
